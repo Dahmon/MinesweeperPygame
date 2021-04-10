@@ -1,0 +1,17 @@
+Make Minesweeper with Pygame 2?
+https://github.com/pygame/pygame/releases/tag/2.0.0
+
+https://realpython.com/pygame-a-primer/
+toolbar: https://stackoverflow.com/questions/24970676/creating-a-toolbar-in-pygame-window
+spritesheet: https://ehmatthes.github.io/pcc_2e/beyond_pcc/pygame_sprite_sheets/
+large project, check structure: https://github.com/Mekire/cabbages-and-kings/tree/master/data
+
+Meaning of underscores in Python: https://dbader.org/blog/meaning-of-underscores-in-python
+
+TODO:
+[x] 1. Generate grid of cells
+[ ] 2. Organise folder structure
+[x] Implement spritesheets
+[ ] Implement cell clicking to reveal and flagging
+[x] Implement face smiles based on clicking
+	[x] Implement face resetting
