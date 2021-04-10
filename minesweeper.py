@@ -13,7 +13,9 @@ from pygame.locals import (
 	K_LEFT,
 	K_RIGHT,
 	K_ESCAPE,
+	K_b,
 	KEYDOWN,
+	KEYUP,
 	QUIT,
 	MOUSEBUTTONUP,
 	MOUSEBUTTONDOWN
@@ -34,8 +36,8 @@ class Minesweeper:
 		# set up variables
 		self.boardWidth = 30
 		self.boardHeight = 20
-		self.bombRatio = 0.25
-		self.showBombs = True
+		self.bombRatio = 0.15
+		self.showBombs = False
 		self.bombCount = (self.boardWidth * self.boardHeight) * self.bombRatio
 		faceButtonRowHeight = 60
 
@@ -101,6 +103,12 @@ class Minesweeper:
 				# quit pygame and exit
 				pygame.quit()
 				sys.exit()
+
+			if event.type == KEYDOWN and event.key == K_b:
+				self.showBombs = not self.showBombs
+				for cell in self.cells:
+					if cell.isBomb:
+						cell.surf = cell.cellSS.image_at(cell.bomb if self.showBombs else cell.normal)
 
 			# Holding both mouse buttons should clear area
 
