@@ -1,6 +1,22 @@
 import pygame
 from spritesheet import SpriteSheet
 
+class Number():
+	def __init__(self, number):
+		self.number = number
+
+		self.numberSS = SpriteSheet('spritesheets/number-sprites.png')
+		self.numberSprites = [
+				(0,16,16,16),
+				(16,16,16,16),
+				(32,16,16,16),
+				(48,16,16,16),
+				(64,16,16,16),
+				(80,16,16,16),
+				(96,16,16,16),
+				(112,16,16,16),
+			]
+
 class Face(pygame.sprite.Sprite):
 	def __init__(self, SCREEN_WIDTH):
 		super(Face, self).__init__()
@@ -24,6 +40,9 @@ class Face(pygame.sprite.Sprite):
 				30
 			)
 		)
+
+	def applySprite(self, sprite):
+		self.surf = self.faceSS.image_at(sprite)
 
 
 
@@ -64,6 +83,8 @@ class Cell(pygame.sprite.Sprite):
 
 		self.rect = self.surf.get_rect(center=(x+8, y+8))
 
+	def applySprite(self, sprite):
+		self.surf = self.cellSS.image_at(sprite)
 
 class Board:
 	def __init__(self, width, height):

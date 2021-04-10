@@ -80,17 +80,17 @@ class Minesweeper:
 			if not cell.isBomb:
 				cell.isBomb = True
 				bombs += 1
-				cell.surf = cell.cellSS.image_at(cell.bomb if self.showBombs else cell.normal)
+				cell.applySprite(cell.bomb if self.showBombs else cell.normal)
 
 	def _resetGame(self):
 		for cell in self.cells:
-			cell.surf = cell.cellSS.image_at(cell.normal)
+			cell.applySprite(cell.normal)
 			cell.isActive = True
 			cell.isBomb = False
 			cell.isPressed = False
 			cell.lockedState = 0
 
-		self.face.surf = self.face.faceSS.image_at(self.face.smile)
+		self.face.applySprite(self.face.smile)
 		self.isRunning = True
 		self.clickCount = 0
 		self._generateBombs(self.bombCount)
@@ -108,22 +108,22 @@ class Minesweeper:
 				self.showBombs = not self.showBombs
 				for cell in self.cells:
 					if cell.isBomb:
-						cell.surf = cell.cellSS.image_at(cell.bomb if self.showBombs else cell.normal)
+						cell.applySprite(cell.bomb if self.showBombs else cell.normal)
 
 			# Holding both mouse buttons should clear area
 
 			if event.type == MOUSEBUTTONDOWN:
 				if event.button == 1 and self.face.rect.collidepoint(pygame.mouse.get_pos()):
 					self.face.isPressed = True
-					self.face.surf = self.face.faceSS.image_at(self.face.clicked)
+					self.face.applySprite(self.face.clicked)
 				elif self.isRunning:
-					self.face.surf = self.face.faceSS.image_at(self.face.cell_pushed)
+					self.face.applySprite(self.face.cell_pushed)
 
 				self._handleCellMouseDown(event)
 
 			if event.type == MOUSEBUTTONUP:
 				if self.isRunning:
-					self.face.surf = self.face.faceSS.image_at(self.face.smile)
+					self.face.applySprite(self.face.smile)
 				if self.face.isPressed and self.face.rect.collidepoint(pygame.mouse.get_pos()):
 					self._resetGame()
 
@@ -151,16 +151,16 @@ class Minesweeper:
 				# if left clicking, handle cell opening
 				if event.button == 1 and not cell.lockedState:
 					cell.isPressed = True
-					cell.surf = cell.cellSS.image_at(cell.clicked)
+					cell.applySprite(cell.clicked)
 
 				# if right clicking, handle cell flagging and question marking
 				if event.button == 3 and cell.isActive:
 					if cell.lockedState < 2:
 						cell.lockedState += 1
-						cell.surf = cell.cellSS.image_at(cell.flag if cell.lockedState == 1 else cell.question)
+						cell.applySprite(cell.flag if cell.lockedState == 1 else cell.question)
 					else:
 						cell.lockedState = 0
-						cell.surf = cell.cellSS.image_at(cell.normal)
+						cell.applySprite(cell.normal)
 
 
 	def _handleCellMouseUp(self, event):
@@ -179,7 +179,7 @@ class Minesweeper:
 					else:
 						self._checkCellNeighbours(self.cells.index(cell))
 				elif cell.isPressed:
-					cell.surf = cell.cellSS.image_at(cell.normal)
+					cell.applySprite(cell.normal)
 
 				cell.isPressed = False
 
@@ -195,16 +195,10 @@ class Minesweeper:
 		# get neighbouringBombs count
 		# replace with list reduce?
 		for neighbourIndex in neighbouringCellIndexes:
-			# ignore out of range indexes
-			if neighbourIndex >= 0 and neighbourIndex < len(self.cells):
-				# TODO: ignore if index is off either edge
-				# rowIndex = math.floor(neighbourIndex / self.boardWidth)
-				# minIndex = rowIndex * self.boardWidth
-				# maxIndex = minIndex + self.boardWidth - 1
-				# if neighbourIndex > minIndex and neighbourIndex < maxIndex:
-				cell = self.cells[neighbourIndex]
+			if self._isInBounds(neighbourIndex):
+				neighbourCell = self.cells[neighbourIndex]
 
-				if cell.isBomb:
+				if neighbourCell.isBomb:
 					neighbouringBombs += 1
 
 		cell = self.cells[cellIndex]
@@ -213,23 +207,36 @@ class Minesweeper:
 		# I THINK BREAKING BECAUSE NEIGHBOR INDEX WRAPS WHEN NEGATIVE OR MORE THAN CELL LIST LENGTH
 		# change sprite and call function on neightbours if required
 		if neighbouringBombs == 0:
-
-			cell.surf = cell.cellSS.image_at(cell.clicked)
+			cell.applySprite(cell.clicked)
 			for neighbourIndex in neighbouringCellIndexes:
-				# ignore out of range indexes
-				if neighbourIndex >= 0 and neighbourIndex < len(self.cells):
-					# TODO: ignore if index is off either edge
+				if self._isInBounds(neighbourIndex):
 					neighbourCell = self.cells[neighbourIndex]
 
 					if neighbourCell.isActive:
 						self._checkCellNeighbours(neighbourIndex)
 		else:
 			# Apply number sprite
-			cell.surf = cell.cellSS.image_at(cell.numberSprites[neighbouringBombs - 1])
+			cell.applySprite(cell.numberSprites[neighbouringBombs - 1])
 
+
+	def _isInBounds(self, cellIndex):
+		# ignore out of range indexes
+		if cellIndex >= 0 and cellIndex < len(self.cells):
+			print(cellIndex)
+			return True
+			# rowFirstIndex = (math.floor(cellIndex / self.boardWidth) * self.boardWidth)
+			# rowLastIndex = rowFirstIndex + self.boardWidth - 1
+			# outOfBoundIndexes = [
+			# 	(rowFirstIndex - self.boardWidth) - 1, (rowFirstIndex - self.boardWidth), (rowFirstIndex - self.boardWidth) + 1,
+			# 	(rowLastIndex + self.boardWidth) - 1, (rowLastIndex + self.boardWidth), (rowLastIndex + self.boardWidth) + 1,
+			# ]
+
+			# return cellIndex not in outOfBoundIndexes
+		
+		return False
 
 	def _handleBombClick(self):
-		self.face.surf = self.face.faceSS.image_at(self.face.dead)
+		self.face.applySprite(self.face.dead)
 		self.isRunning = False
 
 		for cell in self.cells:
@@ -237,11 +244,11 @@ class Minesweeper:
 			if cell.isBomb:
 				if not cell.lockedState == 1:
 					if cell.rect.collidepoint(pygame.mouse.get_pos()):
-						cell.surf = cell.cellSS.image_at(cell.bombClicked)
+						cell.applySprite(cell.bombClicked)
 					else:
-						cell.surf = cell.cellSS.image_at(cell.bomb)
+						cell.applySprite(cell.bomb)
 			elif cell.lockedState:
-				cell.surf = cell.cellSS.image_at(cell.bombIncorrect)
+				cell.applySprite(cell.bombIncorrect)
 
 
 if __name__ == '__main__':
