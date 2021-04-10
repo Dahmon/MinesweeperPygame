@@ -8,9 +8,13 @@ large project, check structure: https://github.com/Mekire/cabbages-and-kings/tre
 
 Meaning of underscores in Python: https://dbader.org/blog/meaning-of-underscores-in-python
 
+bugs:
+[ ] mines being 
+
 TODO:
-[x] 1. Generate grid of cells
-[ ] 2. Organise folder structure
+[ ] 1. Exclude counting and revealing 
+[x] Generate grid of cells
+[ ] Organise folder structure
 [x] Implement spritesheets
 [ ] Implement cell clicking to reveal and flagging
 [x] Implement face smiles based on clicking

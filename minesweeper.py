@@ -3,6 +3,7 @@
 
 # import the pygame library
 import random
+import math
 import pygame
 import sys
 # import pygame.locals for easier access to key coordinates
@@ -28,11 +29,14 @@ class Minesweeper:
 		pygame.init()
 
 		self.isRunning = True
+		self.clickCount = 0
 
 		# set up variables
 		self.boardWidth = 30
 		self.boardHeight = 20
-		self.bombRatio = 0.2 # 20%
+		self.bombRatio = 0.25
+		self.showBombs = True
+		self.bombCount = (self.boardWidth * self.boardHeight) * self.bombRatio
 		faceButtonRowHeight = 60
 
 		SCREEN_WIDTH = self.boardWidth * 16
@@ -58,7 +62,7 @@ class Minesweeper:
 				self.sprites.add(cell)
 				self.cells.append(cell)
 		
-		self._generateBombs()
+		self._generateBombs(self.bombCount)
 
 
 	def runGame(self):
@@ -67,17 +71,14 @@ class Minesweeper:
 			self._checkEvents()
 			self._updateScreen()
 
-
-	def _generateBombs(self):
+	def _generateBombs(self, bombCount):
 		bombs = 0
-		bombCount = (self.boardWidth * self.boardHeight) * self.bombRatio
-
 		while bombs < bombCount:
 			cell = self.cells[random.randint(0, len(self.cells) - 1)]
 			if not cell.isBomb:
 				cell.isBomb = True
 				bombs += 1
-				cell.surf = cell.cellSS.image_at(cell.bomb)
+				cell.surf = cell.cellSS.image_at(cell.bomb if self.showBombs else cell.normal)
 
 	def _resetGame(self):
 		for cell in self.cells:
@@ -89,7 +90,8 @@ class Minesweeper:
 
 		self.face.surf = self.face.faceSS.image_at(self.face.smile)
 		self.isRunning = True
-		self._generateBombs()
+		self.clickCount = 0
+		self._generateBombs(self.bombCount)
 
 	def _checkEvents(self):
 		# loop through all events in queue
@@ -155,17 +157,23 @@ class Minesweeper:
 
 	def _handleCellMouseUp(self, event):
 		for cell in self.cells:
-			if cell.isPressed and cell.rect.collidepoint(pygame.mouse.get_pos()):
-				cell.isActive = False
-				if cell.isBomb:
-					self._handleBombClick()
-				else:
-					self._checkCellNeighbours(self.cells.index(cell))
+			if cell.isActive:
+				if cell.isPressed and cell.rect.collidepoint(pygame.mouse.get_pos()):
+					self.clickCount += 1
 
-			elif cell.isPressed:
-				cell.surf = cell.cellSS.image_at(cell.normal)
+					if cell.isBomb:
+						if self.clickCount == 1:
+							cell.isBomb = False
+							self._generateBombs(1)
+							self._checkCellNeighbours(self.cells.index(cell))
+						else:
+							self._handleBombClick()
+					else:
+						self._checkCellNeighbours(self.cells.index(cell))
+				elif cell.isPressed:
+					cell.surf = cell.cellSS.image_at(cell.normal)
 
-			cell.isPressed = False
+				cell.isPressed = False
 
 
 	def _checkCellNeighbours(self, cellIndex):
@@ -179,24 +187,35 @@ class Minesweeper:
 		# get neighbouringBombs count
 		# replace with list reduce?
 		for neighbourIndex in neighbouringCellIndexes:
-			cell = self.cells[neighbourIndex]
-			if cell.isBomb:
-				neighbouringBombs += 1
+			# ignore out of range indexes
+			if neighbourIndex >= 0 and neighbourIndex < len(self.cells):
+				# TODO: ignore if index is off either edge
+				# rowIndex = math.floor(neighbourIndex / self.boardWidth)
+				# minIndex = rowIndex * self.boardWidth
+				# maxIndex = minIndex + self.boardWidth - 1
+				# if neighbourIndex > minIndex and neighbourIndex < maxIndex:
+				cell = self.cells[neighbourIndex]
+
+				if cell.isBomb:
+					neighbouringBombs += 1
 
 		cell = self.cells[cellIndex]
+		cell.isActive = False
 
 		# I THINK BREAKING BECAUSE NEIGHBOR INDEX WRAPS WHEN NEGATIVE OR MORE THAN CELL LIST LENGTH
 		# change sprite and call function on neightbours if required
 		if neighbouringBombs == 0:
-			print('no neighbor bombs')
+
 			cell.surf = cell.cellSS.image_at(cell.clicked)
 			for neighbourIndex in neighbouringCellIndexes:
-				neighbourCell = self.cells[neighbourIndex]
-				if neighbourCell.isActive: 
-					print('recursion hell!')
-					# self._checkCellNeighbours(neighbourIndex)
+				# ignore out of range indexes
+				if neighbourIndex >= 0 and neighbourIndex < len(self.cells):
+					# TODO: ignore if index is off either edge
+					neighbourCell = self.cells[neighbourIndex]
+
+					if neighbourCell.isActive:
+						self._checkCellNeighbours(neighbourIndex)
 		else:
-			print('!neighbor bombs!')
 			# Apply number sprite
 			cell.surf = cell.cellSS.image_at(cell.numberSprites[neighbouringBombs - 1])
 
