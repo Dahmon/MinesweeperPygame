@@ -10,8 +10,10 @@ Meaning of underscores in Python: https://dbader.org/blog/meaning-of-underscores
 
 bugs:
 [ ] Neighbour mines function isInBounds
+	Probably fixed by changing self.cells into multi dimensional array
 
 TODO:
+[ ] Implement scaling, it is small
 [ ] 1. Exclude counting and revealing 
 [ ] Fix Face class rect init
 [x] Generate grid of cells

@@ -1,9 +1,11 @@
 import pygame
+import math
 from spritesheet import SpriteSheet
 
 class Display():
 	def __init__(self):
 		self.numberSS = SpriteSheet('spritesheets/number-sprites.png')
+		self.negative = (130,0,13,23)
 		self.numberSprites = [
 			(0,0,13,23),
 			(13,0,13,23),
@@ -23,13 +25,15 @@ class Display():
 			self.numberSS.image_at(self.numberSprites[0]),
 		]
 
-	def setDisplay(self, numberStr):
-		self.digits = [
-			self.numberSS.image_at(self.numberSprites[int(numberStr[0])]),
-			self.numberSS.image_at(self.numberSprites[int(numberStr[1])]),
-			self.numberSS.image_at(self.numberSprites[int(numberStr[2])]),
-		]
-		
+	def setDisplay(self, number):
+		paddedNumber = str(math.trunc(number)).zfill(3)
+
+		for index, digit in enumerate(self.digits):
+			if number < 0 and index == 0:
+				self.digits[index] = self.numberSS.image_at(self.negative)
+			else:
+				spriteIndex = int(paddedNumber[index])
+				self.digits[index] = self.numberSS.image_at(self.numberSprites[spriteIndex])
 
 class Face(pygame.sprite.Sprite):
 	def __init__(self, SCREEN_WIDTH):

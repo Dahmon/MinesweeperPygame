@@ -63,6 +63,7 @@ class Minesweeper:
 		pygame.display.set_caption('Minesweeper')
 
 		self.flagDisplay = Display()
+		self.flagDisplay.setDisplay(self.bombCount)
 
 		self.sprites = pygame.sprite.Group()
 		# set up face and sprites
@@ -116,12 +117,11 @@ class Minesweeper:
 			cell.lockedState = 0
 
 		self.face.applySprite(self.face.smile)
+		self.flagDisplay.setDisplay(self.bombCount)
 		self.isRunning = True
 		self.clickCount = 0
 		self.revealedCellCount = 0
 		self._generateBombs(self.bombCount)
-
-		self.flagDisplay.setDisplay('999')
 
 	def _checkEvents(self):
 		# loop through all events in queue
@@ -159,6 +159,7 @@ class Minesweeper:
 				self._handleCellMouseUp(event)
 
 	def _handleCellMouseDown(self, event):
+		flaggedCells = 0
 		for cell in self.cells:
 			if cell.isActive and cell.rect.collidepoint(pygame.mouse.get_pos()):
 				# if left clicking, handle cell opening
@@ -174,7 +175,11 @@ class Minesweeper:
 					else:
 						cell.lockedState = 0
 						cell.applySprite(cell.normal)
+			
+			if cell.lockedState:
+				flaggedCells += 1
 
+		self.flagDisplay.setDisplay(self.bombCount - flaggedCells)
 
 	def _handleCellMouseUp(self, event):
 		for cell in self.cells:
@@ -219,10 +224,7 @@ class Minesweeper:
 		self.revealedCellCount += 1
 
 		expectedRevealedCount = math.floor((self.boardWidth * self.boardHeight) - self.bombCount)
-		print(self.revealedCellCount)
-		print(expectedRevealedCount)
 		if self.revealedCellCount == expectedRevealedCount:
-			print('win')
 			self._handleWin()
 
 		# I THINK BREAKING BECAUSE NEIGHBOR INDEX WRAPS WHEN NEGATIVE OR MORE THAN CELL LIST LENGTH
