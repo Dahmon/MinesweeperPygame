@@ -9,10 +9,11 @@ large project, check structure: https://github.com/Mekire/cabbages-and-kings/tre
 Meaning of underscores in Python: https://dbader.org/blog/meaning-of-underscores-in-python
 
 bugs:
-[ ] mines being 
+[ ] Neighbour mines function isInBounds
 
 TODO:
 [ ] 1. Exclude counting and revealing 
+[ ] Fix Face class rect init
 [x] Generate grid of cells
 [ ] Organise folder structure
 [x] Implement spritesheets

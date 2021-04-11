@@ -1,21 +1,35 @@
 import pygame
 from spritesheet import SpriteSheet
 
-class Number():
-	def __init__(self, number):
-		self.number = number
-
+class Display():
+	def __init__(self):
 		self.numberSS = SpriteSheet('spritesheets/number-sprites.png')
 		self.numberSprites = [
-				(0,16,16,16),
-				(16,16,16,16),
-				(32,16,16,16),
-				(48,16,16,16),
-				(64,16,16,16),
-				(80,16,16,16),
-				(96,16,16,16),
-				(112,16,16,16),
-			]
+			(0,0,13,23),
+			(13,0,13,23),
+			(26,0,13,23),
+			(39,0,13,23),
+			(52,0,13,23),
+			(65,0,13,23),
+			(78,0,13,23),
+			(91,0,13,23),
+			(104,0,13,23),
+			(117,0,13,23),
+		]
+
+		self.digits = [
+			self.numberSS.image_at(self.numberSprites[0]),
+			self.numberSS.image_at(self.numberSprites[0]),
+			self.numberSS.image_at(self.numberSprites[0]),
+		]
+
+	def setDisplay(self, numberStr):
+		self.digits = [
+			self.numberSS.image_at(self.numberSprites[int(numberStr[0])]),
+			self.numberSS.image_at(self.numberSprites[int(numberStr[1])]),
+			self.numberSS.image_at(self.numberSprites[int(numberStr[2])]),
+		]
+		
 
 class Face(pygame.sprite.Sprite):
 	def __init__(self, SCREEN_WIDTH):
@@ -85,15 +99,3 @@ class Cell(pygame.sprite.Sprite):
 
 	def applySprite(self, sprite):
 		self.surf = self.cellSS.image_at(sprite)
-
-class Board:
-	def __init__(self, width, height):
-		self.width = width
-		self.height = height
-		self.spritesheet = SpriteSheet('spritesheets/cell-sprites.png')
-
-		self.cells = []
-	
-	def _create_board(self):
-		pass
-	pass

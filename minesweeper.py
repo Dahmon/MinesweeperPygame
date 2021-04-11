@@ -22,16 +22,17 @@ from pygame.locals import (
 )
 
 # Import classes
-from classes import Face, Cell, Board #, Settings
+from classes import Face, Cell, Display
 
 
 class Minesweeper:
 	def __init__(self):
 		# init game and assets 
 		pygame.init()
-
+		self.clock = pygame.time.Clock()
 		self.isRunning = True
 		self.clickCount = 0
+		self.revealedCellCount = 0
 
 		# set up variables
 		self.boardWidth = 30
@@ -39,39 +40,44 @@ class Minesweeper:
 		self.bombRatio = 0.15
 		self.showBombs = False
 		self.bombCount = (self.boardWidth * self.boardHeight) * self.bombRatio
-		faceButtonRowHeight = 60
-
-		SCREEN_WIDTH = self.boardWidth * 16
-		SCREEN_HEIGHT = self.boardHeight * 16 + faceButtonRowHeight
-
-		# set up the drawing window
-		self.screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
-		self.screen.fill((255, 255, 255))
-
-		pygame.display.set_caption('Minesweeper')
-		self.clock = pygame.time.Clock()
-
-		# set up face and sprites
-		self.face = Face(SCREEN_WIDTH)
-		self.sprites = pygame.sprite.Group()
-		self.sprites.add(self.face)
-
+		self.faceButtonRowHeight = 60
 		self.cells = []
-		# self.board = Board(boardWidth, boardHeight)
-		for y in range(self.boardHeight):
-			for x in range(self.boardWidth):
-				cell = Cell(x * 16, (y * 16) + faceButtonRowHeight)
-				self.sprites.add(cell)
-				self.cells.append(cell)
-		
-		self._generateBombs(self.bombCount)
 
+		self._initUi()
+		self._initGame()
 
 	def runGame(self):
 		# start main game loop
 		while True:
 			self._checkEvents()
 			self._updateScreen()
+
+	def _initUi(self):
+		SCREEN_WIDTH = self.boardWidth * 16
+		SCREEN_HEIGHT = self.boardHeight * 16 + self.faceButtonRowHeight
+
+		# set up the drawing window
+		self.screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
+		self.screen.fill((255, 255, 255))
+
+		pygame.display.set_caption('Minesweeper')
+
+		self.flagDisplay = Display()
+
+		self.sprites = pygame.sprite.Group()
+		# set up face and sprites
+		self.face = Face(SCREEN_WIDTH)
+		self.sprites.add(self.face)
+
+	def _initGame(self):
+		# self.board = Board(boardWidth, boardHeight)
+		for y in range(self.boardHeight):
+			for x in range(self.boardWidth):
+				cell = Cell(x * 16, (y * 16) + self.faceButtonRowHeight)
+				self.sprites.add(cell)
+				self.cells.append(cell)
+		
+		self._generateBombs(self.bombCount)
 
 	def _generateBombs(self, bombCount):
 		bombs = 0
@@ -81,6 +87,25 @@ class Minesweeper:
 				cell.isBomb = True
 				bombs += 1
 				cell.applySprite(cell.bomb if self.showBombs else cell.normal)
+
+	def _updateScreen(self):
+		# fill the background with white
+		# self.screen.fill((255, 255, 255))
+
+		# draw all sprites
+		for entity in self.sprites:
+			self.screen.blit(entity.surf, entity.rect)
+
+		i = 0
+		for digitImage in self.flagDisplay.digits:
+			self.screen.blit(digitImage, (i*13,0))
+			i += 1
+
+		# update the display
+		pygame.display.flip()
+
+		# Ensure program maintains a rate of 30 frames per second
+		self.clock.tick(30)
 
 	def _resetGame(self):
 		for cell in self.cells:
@@ -93,7 +118,10 @@ class Minesweeper:
 		self.face.applySprite(self.face.smile)
 		self.isRunning = True
 		self.clickCount = 0
+		self.revealedCellCount = 0
 		self._generateBombs(self.bombCount)
+
+		self.flagDisplay.setDisplay('999')
 
 	def _checkEvents(self):
 		# loop through all events in queue
@@ -129,21 +157,6 @@ class Minesweeper:
 
 				# handle cell click after face, so can apply correct sprite
 				self._handleCellMouseUp(event)
-
-	def _updateScreen(self):
-		# fill the background with white
-		# self.screen.fill((255, 255, 255))
-
-		# draw all sprites
-		for entity in self.sprites:
-			self.screen.blit(entity.surf, entity.rect)
-
-		# update the display
-		pygame.display.flip()
-
-		# Ensure program maintains a rate of 30 frames per second
-		self.clock.tick(30)
-
 
 	def _handleCellMouseDown(self, event):
 		for cell in self.cells:
@@ -203,6 +216,14 @@ class Minesweeper:
 
 		cell = self.cells[cellIndex]
 		cell.isActive = False
+		self.revealedCellCount += 1
+
+		expectedRevealedCount = math.floor((self.boardWidth * self.boardHeight) - self.bombCount)
+		print(self.revealedCellCount)
+		print(expectedRevealedCount)
+		if self.revealedCellCount == expectedRevealedCount:
+			print('win')
+			self._handleWin()
 
 		# I THINK BREAKING BECAUSE NEIGHBOR INDEX WRAPS WHEN NEGATIVE OR MORE THAN CELL LIST LENGTH
 		# change sprite and call function on neightbours if required
@@ -222,13 +243,13 @@ class Minesweeper:
 	def _isInBounds(self, cellIndex):
 		# ignore out of range indexes
 		if cellIndex >= 0 and cellIndex < len(self.cells):
-			print(cellIndex)
 			return True
 			# rowFirstIndex = (math.floor(cellIndex / self.boardWidth) * self.boardWidth)
 			# rowLastIndex = rowFirstIndex + self.boardWidth - 1
 			# outOfBoundIndexes = [
-			# 	(rowFirstIndex - self.boardWidth) - 1, (rowFirstIndex - self.boardWidth), (rowFirstIndex - self.boardWidth) + 1,
-			# 	(rowLastIndex + self.boardWidth) - 1, (rowLastIndex + self.boardWidth), (rowLastIndex + self.boardWidth) + 1,
+			# 	(rowFirstIndex - self.boardWidth) - 1, (rowLastIndex - self.boardWidth) + 1,
+			# 	rowFirstIndex - 1, rowLastIndex + 1,
+			# 	(rowFirstIndex + self.boardWidth) - 1, (rowLastIndex + self.boardWidth) + 1,
 			# ]
 
 			# return cellIndex not in outOfBoundIndexes
@@ -250,6 +271,14 @@ class Minesweeper:
 			elif cell.lockedState:
 				cell.applySprite(cell.bombIncorrect)
 
+	def _handleWin(self):
+		self.face.applySprite(self.face.win)
+		self.isRunning = False
+
+		for cell in self.cells:
+			cell.isActive = False
+			if cell.isBomb:
+				cell.applySprite(cell.flag)
 
 if __name__ == '__main__':
 	minesweeper = Minesweeper()
