@@ -37,7 +37,7 @@ class Minesweeper:
 		# set up variables
 		self.boardWidth = 30
 		self.boardHeight = 20
-		self.bombRatio = 0.15
+		self.bombRatio = 1
 		self.showBombs = False
 		self.bombCount = (self.boardWidth * self.boardHeight) * self.bombRatio
 		self.faceButtonRowHeight = 60
@@ -230,6 +230,8 @@ class Minesweeper:
 			if neighbourRow >= 0 and neighbourRow <= (self.boardHeight - 1):
 				for neighbourCol in (col - 1, col, col + 1):
 					if neighbourCol >= 0 and neighbourCol <= (self.boardWidth - 1):
+						# TODO: Should not count self as bomb, for if ratio is set to 1
+						# if neighbourRow == row and not neighbourCol == col:
 						if self.cells[neighbourRow][neighbourCol].isBomb:
 							neighbouringBombs += 1
 

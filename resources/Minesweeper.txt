@@ -14,11 +14,6 @@ bugs:
 
 TODO:
 [ ] Implement scaling, it is small
-[ ] 1. Exclude counting and revealing 
+[ ] Do not count own cell as bomb, for if ratio is set to 1
 [ ] Fix Face class rect init
-[x] Generate grid of cells
-[ ] Organise folder structure
-[x] Implement spritesheets
-[ ] Implement cell clicking to reveal and flagging
-[x] Implement face smiles based on clicking
-	[x] Implement face resetting
+[ ] Fix number rendering
