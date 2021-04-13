@@ -3,7 +3,8 @@ import math
 from spritesheet import SpriteSheet
 
 class Display():
-	def __init__(self):
+	def __init__(self, pos):
+		self.pos = pos
 		self.numberSS = SpriteSheet('spritesheets/number-sprites.png')
 		self.negative = (130,0,13,23)
 		self.numberSprites = [

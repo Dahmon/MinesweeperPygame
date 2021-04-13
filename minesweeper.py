@@ -62,8 +62,11 @@ class Minesweeper:
 
 		pygame.display.set_caption('Minesweeper')
 
-		self.flagDisplay = Display()
+		self.flagDisplay = Display(0)
 		self.flagDisplay.setDisplay(self.bombCount)
+
+		self.timeDisplay = Display(SCREEN_WIDTH - 39)
+		self.timeDisplay.setDisplay(0)
 
 		self.sprites = pygame.sprite.Group()
 		# set up face and sprites
@@ -99,7 +102,11 @@ class Minesweeper:
 
 		i = 0
 		for digitImage in self.flagDisplay.digits:
-			self.screen.blit(digitImage, (i*13,0))
+			self.screen.blit(digitImage, ((self.flagDisplay.pos + i*13),0))
+			i += 1
+		i = 0
+		for digitImage in self.timeDisplay.digits:
+			self.screen.blit(digitImage, (self.timeDisplay.pos + i*13,0))
 			i += 1
 
 		# update the display
@@ -180,6 +187,7 @@ class Minesweeper:
 				flaggedCells += 1
 
 		self.flagDisplay.setDisplay(self.bombCount - flaggedCells)
+		print(self.clock.get_time())
 
 	def _handleCellMouseUp(self, event):
 		for cell in self.cells:
