@@ -9,8 +9,10 @@ large project, check structure: https://github.com/Mekire/cabbages-and-kings/tre
 Meaning of underscores in Python: https://dbader.org/blog/meaning-of-underscores-in-python
 
 bugs:
-[ ] Neighbour mines function isInBounds
+[x] Neighbour mines function isInBounds
 	Probably fixed by changing self.cells into multi dimensional array
+[ ] _handleCellMouseUp not setting cell isBomb to false when bombRatio is 1
+
 
 TODO:
 [ ] Implement scaling, it is small

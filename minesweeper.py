@@ -37,7 +37,7 @@ class Minesweeper:
 		# set up variables
 		self.boardWidth = 30
 		self.boardHeight = 20
-		self.bombRatio = 1
+		self.bombRatio = .15
 		self.showBombs = False
 		self.bombCount = (self.boardWidth * self.boardHeight) * self.bombRatio
 		self.faceButtonRowHeight = 60
@@ -165,6 +165,8 @@ class Minesweeper:
 			if event.type == MOUSEBUTTONUP:
 				if self.isRunning:
 					self.face.applySprite(self.face.smile)
+				else:
+					self.face.applySprite(self.face.dead)
 				if self.face.isPressed and self.face.rect.collidepoint(pygame.mouse.get_pos()):
 					self._resetGame()
 

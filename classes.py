@@ -72,7 +72,7 @@ class Cell(pygame.sprite.Sprite):
 		# 0 = unlocked, 1 = flagged, 2 = question
 		self.lockedState = 0
 
-		self.cellSS = SpriteSheet('spritesheets/cell-sprites.png')
+		self.cellSS = SpriteSheet('spritesheets/cell-sprites-2.png')
 
 		# cell sprites
 		self.normal = (0,0,16,16)
@@ -91,6 +91,7 @@ class Cell(pygame.sprite.Sprite):
 			(80,16,16,16),
 			(96,16,16,16),
 			(112,16,16,16),
+			(128,16,16,16)
 		]
 
 		self.surf = self.cellSS.image_at((0,0,16,16))
