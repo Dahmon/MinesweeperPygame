@@ -3,8 +3,9 @@ import math
 from spritesheet import SpriteSheet
 
 class Display():
-	def __init__(self, pos):
-		self.pos = pos
+	def __init__(self, rect, length = 4):
+		self.rect = rect
+		self.length = length
 		self.numberSS = SpriteSheet('spritesheets/number-sprites.png')
 		self.negative = (130,0,13,23)
 		self.numberSprites = [
@@ -20,17 +21,19 @@ class Display():
 			(117,0,13,23),
 		]
 
-		self.digits = [None] * 3
+		self.digits = [None] * self.length
+		self.displaySurface = pygame.Surface((13 * self.length,23))
 
 	def setDisplay(self, number):
-		paddedNumber = str(math.trunc(number)).zfill(3)
+		paddedNumber = str(math.trunc(number)).zfill(self.length)
 
-		for index, digit in enumerate(self.digits):
+		for index in range(self.length):
 			if number < 0 and index == 0:
+				self.displaySurface.blit(self.numberSS.image_at(self.negative), (13 * index, 0))
 				self.digits[index] = self.numberSS.image_at(self.negative)
 			else:
 				spriteIndex = int(paddedNumber[index])
-				self.digits[index] = self.numberSS.image_at(self.numberSprites[spriteIndex])
+				self.displaySurface.blit(self.numberSS.image_at(self.numberSprites[spriteIndex]), (13 * index, 0))
 
 class Face(pygame.sprite.Sprite):
 	def __init__(self, SCREEN_WIDTH):

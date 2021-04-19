@@ -37,7 +37,7 @@ class Minesweeper:
 		# set up variables
 		self.boardWidth = 30
 		self.boardHeight = 20
-		self.bombRatio = .15
+		self.bombRatio = 0.15
 		self.showBombs = False
 		self.bombCount = (self.boardWidth * self.boardHeight) * self.bombRatio
 		self.faceButtonRowHeight = 60
@@ -62,11 +62,13 @@ class Minesweeper:
 
 		pygame.display.set_caption('Minesweeper')
 
+		self.displays = []
 		self.flagDisplay = Display(0)
 		self.flagDisplay.setDisplay(self.bombCount)
-
-		self.timeDisplay = Display(SCREEN_WIDTH - 39)
+		self.displays.append(self.flagDisplay)
+		self.timeDisplay = Display(SCREEN_WIDTH - 52)
 		self.timeDisplay.setDisplay(0)
+		self.displays.append(self.timeDisplay)
 
 		self.sprites = pygame.sprite.Group()
 		# set up face and sprites
@@ -104,14 +106,8 @@ class Minesweeper:
 		for entity in self.sprites:
 			self.screen.blit(entity.surf, entity.rect)
 
-		i = 0
-		for digitImage in self.flagDisplay.digits:
-			self.screen.blit(digitImage, ((self.flagDisplay.pos + i*13),0))
-			i += 1
-		i = 0
-		for digitImage in self.timeDisplay.digits:
-			self.screen.blit(digitImage, (self.timeDisplay.pos + i*13,0))
-			i += 1
+		for display in self.displays:
+			self.screen.blit(display.displaySurface, (display.rect, 0))
 
 		# update the display
 		pygame.display.flip()
