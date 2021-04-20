@@ -12,7 +12,7 @@ bugs:
 [x] Neighbour mines function isInBounds
 	Probably fixed by changing self.cells into multi dimensional array
 [ ] _handleCellMouseUp not setting cell isBomb to false when bombRatio is 1
-[ ] On win screen, if hold drag sunglasses it will show death face
+[x] On win screen, if hold drag sunglasses it will show death face
 	- click anywheere actually. Might only apply when ratio is 0
 
 

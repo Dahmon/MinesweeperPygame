@@ -30,7 +30,7 @@ class Minesweeper:
 		# init game and assets 
 		pygame.init()
 		self.clock = pygame.time.Clock()
-		self.isRunning = True
+		self.gameState = 1 # 0 = lost, 1 = running, 2 = win
 		self.clickCount = 0
 		self.revealedCellCount = 0
 
@@ -39,7 +39,7 @@ class Minesweeper:
 		self.boardHeight = 20
 		self.bombRatio = 0.15
 		self.showBombs = False
-		self.bombCount = (self.boardWidth * self.boardHeight) * self.bombRatio
+		self.bombCount = math.floor((self.boardWidth * self.boardHeight) * self.bombRatio)
 		self.faceButtonRowHeight = 60
 		self.cells = []
 
@@ -126,7 +126,7 @@ class Minesweeper:
 
 		self.face.applySprite(self.face.smile)
 		self.flagDisplay.setDisplay(self.bombCount)
-		self.isRunning = True
+		self.gameState = 1
 		self.clickCount = 0
 		self.revealedCellCount = 0
 		self._generateBombs(self.bombCount)
@@ -153,18 +153,21 @@ class Minesweeper:
 				if event.button == 1 and self.face.rect.collidepoint(pygame.mouse.get_pos()):
 					self.face.isPressed = True
 					self.face.applySprite(self.face.clicked)
-				elif self.isRunning:
-					self.face.applySprite(self.face.cell_pushed)
+				elif self.gameState == 1:
+					self.face.applySprite(self.face.cellPushed)
 
 				self._handleCellMouseDown(event)
 
 			if event.type == MOUSEBUTTONUP:
-				if self.isRunning:
-					self.face.applySprite(self.face.smile)
-				else:
-					self.face.applySprite(self.face.dead)
 				if self.face.isPressed and self.face.rect.collidepoint(pygame.mouse.get_pos()):
 					self._resetGame()
+
+				if self.gameState == 2:
+					self.face.applySprite(self.face.win)
+				elif self.gameState == 0:
+					self.face.applySprite(self.face.dead)
+				else:
+					self.face.applySprite(self.face.smile)
 
 				# handle cell click after face, so can apply correct sprite
 				self._handleCellMouseUp(event)
@@ -248,7 +251,7 @@ class Minesweeper:
 
 	def _handleBombClick(self):
 		self.face.applySprite(self.face.dead)
-		self.isRunning = False
+		self.gameState = 0
 
 		for row in self.cells:
 			for cell in row:
@@ -267,7 +270,7 @@ class Minesweeper:
 		expectedRevealedCount = math.floor((self.boardWidth * self.boardHeight) - self.bombCount)
 		if self.revealedCellCount == expectedRevealedCount:
 			self.face.applySprite(self.face.win)
-			self.isRunning = False
+			self.gameState = 2
 
 			for row in self.cells:
 				for cell in row:

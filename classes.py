@@ -45,7 +45,7 @@ class Face(pygame.sprite.Sprite):
 
 		self.smile = (0,0,24,24)
 		self.clicked = (24,0,24,24)
-		self.cell_pushed = (48,0,24,24)
+		self.cellPushed = (48,0,24,24)
 		self.win = (72,0,24,24)
 		self.dead = (96,0,24,24)
 
