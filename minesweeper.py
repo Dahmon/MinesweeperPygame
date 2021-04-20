@@ -218,6 +218,8 @@ class Minesweeper:
 
 	def _handleFaceMouseUp(self):
 		if self.face.isPressed and self.face.rect.collidepoint(pygame.mouse.get_pos()):
+			self.settings.resets += 1
+			pickle.dump(self.settings, open('save', 'wb'), pickle.HIGHEST_PROTOCOL)
 			self._resetGame()
 
 		if self.gameState == 2:
@@ -287,6 +289,8 @@ class Minesweeper:
 			cell.applySprite(cell.numberSprites[neighbouringBombs - 1])
 
 	def _handleBombClick(self):
+		self.settings.losses += 1
+		pickle.dump(self.settings, open('save', 'wb'), pickle.HIGHEST_PROTOCOL)
 		self.face.applySprite(self.face.dead)
 		self.gameState = 0
 
@@ -304,9 +308,14 @@ class Minesweeper:
 					cell.applySprite(cell.bombIncorrect)
 
 	def _onButton1Click(self, event):
-		print('Button 1')
+		print('Wins: ' + str(self.settings.wins))
+		print('Losses: ' + str(self.settings.losses))
+		print('Resets: ' + str(self.settings.resets))
 	def _onButton2Click(self, event):
-		print('Button 2')
+		self.settings = Settings()
+		pickle.dump(self.settings, open('save', 'wb'), pickle.HIGHEST_PROTOCOL)
+		self._resetGame()
+		print('Settings reset')
 	def _onButton3Click(self, event):
 		print('Button 3')
 
@@ -314,6 +323,8 @@ class Minesweeper:
 	def _checkWinCondition(self):
 		expectedRevealedCount = math.floor((self.settings.boardWidth * self.settings.boardHeight) - self.bombCount)
 		if self.revealedCellCount == expectedRevealedCount:
+			self.settings.wins += 1
+			pickle.dump(self.settings, open('save', 'wb'), pickle.HIGHEST_PROTOCOL)
 			self.face.applySprite(self.face.win)
 			self.gameState = 2
 
