@@ -6,6 +6,7 @@ import random
 import math
 import pygame
 import sys
+import pickle
 # import pygame.locals for easier access to key coordinates
 from pygame.locals import (
 	K_UP,
@@ -22,8 +23,8 @@ from pygame.locals import (
 )
 
 # Import classes
-from classes import Face, Cell, Display, Button
-
+from classes import Face, Cell, Display, Button, Settings
+from helpers import readOrCreatePickle
 
 class Minesweeper:
 	def __init__(self):
@@ -35,13 +36,10 @@ class Minesweeper:
 		self.revealedCellCount = 0
 
 		# set up variables
-		self.boardWidth = 30
-		self.boardHeight = 20
-		self.bombRatio = 0.15
-		self.showBombs = False
-		self.bombCount = math.floor((self.boardWidth * self.boardHeight) * self.bombRatio)
+		self.settings = readOrCreatePickle('save', Settings())
+		self.bombCount = math.floor((self.settings.boardWidth * self.settings.boardHeight) * self.settings.bombRatio)
 		self.faceButtonRowHeight = 60
-		self.cells = []
+		self.showBombs = False
 
 		self._initUi()
 		self._initGame()
@@ -53,8 +51,8 @@ class Minesweeper:
 			self._updateScreen()
 
 	def _initUi(self):
-		SCREEN_WIDTH = self.boardWidth * 16
-		SCREEN_HEIGHT = self.boardHeight * 16 + self.faceButtonRowHeight
+		SCREEN_WIDTH = self.settings.boardWidth * 16
+		SCREEN_HEIGHT = self.settings.boardHeight * 16 + self.faceButtonRowHeight
 
 		# set up the drawing window
 		self.screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
@@ -81,9 +79,10 @@ class Minesweeper:
 		self.buttons = [self.button1, self.button2, self.button3]
 
 	def _initGame(self):
-		for row in range(self.boardHeight):
+		self.cells = []
+		for row in range(self.settings.boardHeight):
 			self.cells.append([])
-			for col in range(self.boardWidth):
+			for col in range(self.settings.boardWidth):
 				cell = Cell(col * 16, (row * 16) + self.faceButtonRowHeight)
 				self.sprites.append(cell)
 				self.cells[row].append(cell)
@@ -93,8 +92,8 @@ class Minesweeper:
 	def _generateBombs(self, bombCount):
 		bombs = 0
 		while bombs < bombCount:
-			randomRow = random.randint(0, self.boardHeight - 1)
-			randomCol = random.randint(0, self.boardWidth - 1)
+			randomRow = random.randint(0, self.settings.boardHeight - 1)
+			randomCol = random.randint(0, self.settings.boardWidth - 1)
 
 			cell = self.cells[randomRow][randomCol]
 			if not cell.isBomb:
@@ -132,12 +131,15 @@ class Minesweeper:
 				cell.isPressed = False
 				cell.lockedState = 0
 
+		self.bombCount = math.floor((self.settings.boardWidth * self.settings.boardHeight) * self.settings.bombRatio)
 		self.face.applySprite(self.face.smile)
 		self.flagDisplay.setDisplay(self.bombCount)
 		self.gameState = 1
 		self.clickCount = 0
 		self.revealedCellCount = 0
-		self._generateBombs(self.bombCount)
+
+		self._initUi()
+		self._initGame()
 
 	def _checkEvents(self):
 		# loop through all events in queue
@@ -154,8 +156,19 @@ class Minesweeper:
 					for cell in row:
 						if cell.isBomb:
 							cell.applySprite(cell.bomb if self.showBombs else cell.normal)
+			
+			if event.type == KEYDOWN and event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
+				if event.key == K_UP:
+					self.settings.boardHeight -= 1
+				if event.key == K_DOWN:
+					self.settings.boardHeight += 1
+				if event.key == K_LEFT:
+					self.settings.boardWidth -= 1
+				if event.key == K_RIGHT:
+					self.settings.boardWidth += 1
 
-			# Holding both mouse buttons should clear area
+				pickle.dump(self.settings, open('save', 'wb'), pickle.HIGHEST_PROTOCOL)
+				self._resetGame()
 
 			if event.type == MOUSEBUTTONDOWN:
 				self._handleFaceMouseDown(event)
@@ -252,9 +265,9 @@ class Minesweeper:
 		self._checkWinCondition()
 
 		for neighbourRow in (row - 1, row, row + 1):
-			if neighbourRow >= 0 and neighbourRow <= (self.boardHeight - 1):
+			if neighbourRow >= 0 and neighbourRow <= (self.settings.boardHeight - 1):
 				for neighbourCol in (col - 1, col, col + 1):
-					if neighbourCol >= 0 and neighbourCol <= (self.boardWidth - 1):
+					if neighbourCol >= 0 and neighbourCol <= (self.settings.boardWidth - 1):
 						# TODO: Should not count self as bomb, for if ratio is set to 1
 						# if neighbourRow == row and not neighbourCol == col:
 						if self.cells[neighbourRow][neighbourCol].isBomb:
@@ -263,9 +276,9 @@ class Minesweeper:
 		if neighbouringBombs == 0:
 			cell.applySprite(cell.clicked)
 			for neighbourRow in (row - 1, row, row + 1):
-				if neighbourRow >= 0 and neighbourRow <= (self.boardHeight - 1):
+				if neighbourRow >= 0 and neighbourRow <= (self.settings.boardHeight - 1):
 					for neighbourCol in (col - 1, col, col + 1):
-						if neighbourCol >= 0 and neighbourCol <= (self.boardWidth - 1):
+						if neighbourCol >= 0 and neighbourCol <= (self.settings.boardWidth - 1):
 							neighbourCell = self.cells[neighbourRow][neighbourCol]
 							if neighbourCell.isActive and not neighbourCell.lockedState == 1:
 								self._checkCellNeighbours(neighbourRow, neighbourCol)
@@ -299,7 +312,7 @@ class Minesweeper:
 
 
 	def _checkWinCondition(self):
-		expectedRevealedCount = math.floor((self.boardWidth * self.boardHeight) - self.bombCount)
+		expectedRevealedCount = math.floor((self.settings.boardWidth * self.settings.boardHeight) - self.bombCount)
 		if self.revealedCellCount == expectedRevealedCount:
 			self.face.applySprite(self.face.win)
 			self.gameState = 2
