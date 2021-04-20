@@ -150,27 +150,21 @@ class Minesweeper:
 			# Holding both mouse buttons should clear area
 
 			if event.type == MOUSEBUTTONDOWN:
-				if event.button == 1 and self.face.rect.collidepoint(pygame.mouse.get_pos()):
-					self.face.isPressed = True
-					self.face.applySprite(self.face.clicked)
-				elif self.gameState == 1:
-					self.face.applySprite(self.face.cellPushed)
-
+				self._handleFaceMouseDown(event)
 				self._handleCellMouseDown(event)
 
 			if event.type == MOUSEBUTTONUP:
-				if self.face.isPressed and self.face.rect.collidepoint(pygame.mouse.get_pos()):
-					self._resetGame()
-
-				if self.gameState == 2:
-					self.face.applySprite(self.face.win)
-				elif self.gameState == 0:
-					self.face.applySprite(self.face.dead)
-				else:
-					self.face.applySprite(self.face.smile)
-
+				self._handleFaceMouseUp()
 				# handle cell click after face, so can apply correct sprite
+				# TODO: What? Why?
 				self._handleCellMouseUp(event)
+
+	def _handleFaceMouseDown(self, event):
+		if event.button == 1 and self.face.rect.collidepoint(pygame.mouse.get_pos()):
+			self.face.isPressed = True
+			self.face.applySprite(self.face.clicked)
+		elif self.gameState == 1:
+			self.face.applySprite(self.face.cellPushed)
 
 	def _handleCellMouseDown(self, event):
 		flaggedCells = 0
@@ -195,6 +189,20 @@ class Minesweeper:
 					flaggedCells += 1
 
 		self.flagDisplay.setDisplay(self.bombCount - flaggedCells)
+
+	def _handleFaceMouseUp(self):
+		if self.face.isPressed and self.face.rect.collidepoint(pygame.mouse.get_pos()):
+			self._resetGame()
+
+		if self.gameState == 2:
+			self.face.applySprite(self.face.win)
+		elif self.gameState == 0:
+			self.face.applySprite(self.face.dead)
+		else:
+			self.face.applySprite(self.face.smile)
+
+		self.face.isPressed = False
+		
 
 	def _handleCellMouseUp(self, event):
 		for row in self.cells:
@@ -243,9 +251,9 @@ class Minesweeper:
 					for neighbourCol in (col - 1, col, col + 1):
 						if neighbourCol >= 0 and neighbourCol <= (self.boardWidth - 1):
 							neighbourCell = self.cells[neighbourRow][neighbourCol]
-							if neighbourCell.isActive:
+							if neighbourCell.isActive and not neighbourCell.lockedState:
 								self._checkCellNeighbours(neighbourRow, neighbourCol)
-							neighbourCell.isActive = False
+								neighbourCell.isActive = False
 		else:
 			cell.applySprite(cell.numberSprites[neighbouringBombs - 1])
 
