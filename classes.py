@@ -35,10 +35,38 @@ class Display():
 				spriteIndex = int(paddedNumber[index])
 				self.displaySurface.blit(self.numberSS.image_at(self.numberSprites[spriteIndex]), (13 * index, 0))
 
-class Face(pygame.sprite.Sprite):
-	def __init__(self, SCREEN_WIDTH):
-		super(Face, self).__init__()
+class Button():
+	def __init__(self, pos, onMouseUp):
+		self.onMouseUp = onMouseUp
 
+		self.faceSS = SpriteSheet('spritesheets/button-sprites.png')
+		self.blank = (0,0,24,24)
+		self.blankPressed = (24,0,24,24)
+
+		self.surf = self.faceSS.image_at(self.blank)
+		self.surf.set_colorkey((255, 255, 255), pygame.RLEACCEL)
+		self.rect = self.surf.get_rect(center=(pos))
+
+		self.isPressed = False
+
+	def applySprite(self, sprite):
+		self.surf = self.faceSS.image_at(sprite)
+	
+	def handleMouseDown(self, event):
+		if event.button == 1 and self.rect.collidepoint(pygame.mouse.get_pos()):
+			self.isPressed = True
+			self.surf = self.faceSS.image_at(self.blankPressed)
+
+	def handleMouseUp(self, event):
+		if self.isPressed:
+			self.isPressed = False
+			self.surf = self.faceSS.image_at(self.blank)
+
+			self.onMouseUp(event)
+
+
+class Face():
+	def __init__(self, SCREEN_WIDTH):
 		self.isPressed = False
 
 		self.faceSS = SpriteSheet('spritesheets/face-sprites.png')
@@ -64,10 +92,8 @@ class Face(pygame.sprite.Sprite):
 
 
 
-class Cell(pygame.sprite.Sprite):
+class Cell():
 	def __init__(self, x, y):
-		super(Cell, self).__init__()
-
 		# Cell state
 		self.isActive = True
 		self.isPressed = False
@@ -82,6 +108,7 @@ class Cell(pygame.sprite.Sprite):
 		self.clicked = (16,0,16,16)
 		self.flag = (32,0,16,16)
 		self.question = (48,0,16,16)
+		self.questionClicked = (64,0,16,16)
 		self.bomb = (80,0,16,16)
 		self.bombClicked = (96,0,16,16)
 		self.bombIncorrect = (112,0,16,16)
