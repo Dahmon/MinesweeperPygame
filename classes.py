@@ -2,15 +2,6 @@ import pygame
 import math
 from spritesheet import SpriteSheet
 
-class Settings():
-	def __init__(self):
-		self.boardWidth = 30
-		self.boardHeight = 20
-		self.bombRatio = 0.15
-		self.wins = 0
-		self.losses = 0
-		self.resets = 0
-
 class Display():
 	def __init__(self, rect, length = 4):
 		self.rect = rect

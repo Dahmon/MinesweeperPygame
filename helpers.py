@@ -7,3 +7,6 @@ def readOrCreatePickle(path, default):
 		foo = default
 		pickle.dump(foo, open(path, "wb"))
 	return foo
+
+def listToString(list):
+	return '[ ' + ', '.join([str(item) for item in list]) + ' ]'

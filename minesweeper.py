@@ -23,15 +23,17 @@ from pygame.locals import (
 )
 
 # Import classes
-from classes import Face, Cell, Display, Button, Settings
-from helpers import readOrCreatePickle
+from classes import Face, Cell, Display, Button
+from settings import Settings
+from helpers import readOrCreatePickle, listToString
 
 class Minesweeper:
 	def __init__(self):
 		# init game and assets 
 		pygame.init()
 		self.clock = pygame.time.Clock()
-		self.gameState = 1 # 0 = lost, 1 = running, 2 = win
+		self.startTicks = pygame.time.get_ticks()
+		self.gameState = 3 # 0 = lost, 1 = running, 2 = win, 3 = idle
 		self.clickCount = 0
 		self.revealedCellCount = 0
 
@@ -43,6 +45,7 @@ class Minesweeper:
 
 		self._initUi()
 		self._initGame()
+
 
 	def runGame(self):
 		# start main game loop
@@ -122,6 +125,10 @@ class Minesweeper:
 		# Ensure program maintains a rate of 30 frames per second
 		self.clock.tick(30)
 
+		if self.gameState == 1:
+			self.gameTime = (pygame.time.get_ticks() - self.startTicks) / 1000
+			self.timeDisplay.setDisplay(math.floor(self.gameTime))
+
 	def _resetGame(self):
 		for row in self.cells:
 			for cell in row:
@@ -134,9 +141,11 @@ class Minesweeper:
 		self.bombCount = math.floor((self.settings.boardWidth * self.settings.boardHeight) * self.settings.bombRatio)
 		self.face.applySprite(self.face.smile)
 		self.flagDisplay.setDisplay(self.bombCount)
-		self.gameState = 1
+		self.gameState = 3
 		self.clickCount = 0
 		self.revealedCellCount = 0
+
+		self.startTicks = pygame.time.get_ticks()
 
 		self._initUi()
 		self._initGame()
@@ -230,7 +239,6 @@ class Minesweeper:
 			self.face.applySprite(self.face.smile)
 
 		self.face.isPressed = False
-		
 
 	def _handleCellMouseUp(self, event):
 		for row in self.cells:
@@ -238,6 +246,10 @@ class Minesweeper:
 				if cell.isActive:
 					if cell.isPressed and cell.rect.collidepoint(pygame.mouse.get_pos()):
 						self.clickCount += 1
+
+						if self.clickCount == 1:
+							self.startTicks = pygame.time.get_ticks()
+							self.gameState = 1
 
 						if cell.isBomb:
 							if self.clickCount == 1:
@@ -289,8 +301,12 @@ class Minesweeper:
 			cell.applySprite(cell.numberSprites[neighbouringBombs - 1])
 
 	def _handleBombClick(self):
+		# update settings
 		self.settings.losses += 1
+		self.settings.lossLengths.append(self.gameTime)
 		pickle.dump(self.settings, open('save', 'wb'), pickle.HIGHEST_PROTOCOL)
+
+		# update game variables
 		self.face.applySprite(self.face.dead)
 		self.gameState = 0
 
@@ -311,6 +327,8 @@ class Minesweeper:
 		print('Wins: ' + str(self.settings.wins))
 		print('Losses: ' + str(self.settings.losses))
 		print('Resets: ' + str(self.settings.resets))
+		print('Win Lengths: ' + listToString(self.settings.winLengths))
+		print('Loss Lengths: ' + listToString(self.settings.lossLengths))
 	def _onButton2Click(self, event):
 		self.settings = Settings()
 		pickle.dump(self.settings, open('save', 'wb'), pickle.HIGHEST_PROTOCOL)
@@ -323,8 +341,12 @@ class Minesweeper:
 	def _checkWinCondition(self):
 		expectedRevealedCount = math.floor((self.settings.boardWidth * self.settings.boardHeight) - self.bombCount)
 		if self.revealedCellCount == expectedRevealedCount:
+			# update settings
 			self.settings.wins += 1
+			self.settings.winLengths.append(self.gameTime)
 			pickle.dump(self.settings, open('save', 'wb'), pickle.HIGHEST_PROTOCOL)
+
+			# update game variables
 			self.face.applySprite(self.face.win)
 			self.gameState = 2
 
