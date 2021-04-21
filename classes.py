@@ -124,6 +124,12 @@ class Cell():
 			(128,16,16,16)
 		]
 
+		self.cellStates = [
+			self.normal,
+			self.flag,
+			self.question
+		]
+
 		self.surf = self.cellSS.image_at((0,0,16,16))
 		self.surf.set_colorkey((255, 255, 255), pygame.RLEACCEL)
 

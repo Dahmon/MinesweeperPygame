@@ -14,12 +14,14 @@ from pygame.locals import (
 	K_LEFT,
 	K_RIGHT,
 	K_ESCAPE,
+	K_LCTRL,
 	K_b,
 	KEYDOWN,
 	KEYUP,
 	QUIT,
 	MOUSEBUTTONUP,
-	MOUSEBUTTONDOWN
+	MOUSEBUTTONDOWN,
+	MOUSEMOTION
 )
 
 # Import classes
@@ -104,7 +106,6 @@ class Minesweeper:
 				bombs += 1
 				cell.applySprite(cell.bomb if self.showBombs else cell.normal)
 
-
 	def _updateScreen(self):
 		# fill the background with white
 		# self.screen.fill((255, 255, 255))
@@ -164,7 +165,7 @@ class Minesweeper:
 				for row in self.cells:
 					for cell in row:
 						if cell.isBomb:
-							cell.applySprite(cell.bomb if self.showBombs else cell.normal)
+							cell.applySprite(cell.bomb if self.showBombs else cell.cellStates[cell.lockedState])
 			
 			if event.type == KEYDOWN and event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
 				if event.key == K_UP:
@@ -209,12 +210,8 @@ class Minesweeper:
 
 					# if right clicking, handle cell flagging and question marking
 					if event.button == 3 and cell.isActive:
-						if cell.lockedState < 2:
-							cell.lockedState += 1
-							cell.applySprite(cell.flag if cell.lockedState == 1 else cell.question)
-						else:
-							cell.lockedState = 0
-							cell.applySprite(cell.normal)
+						cell.lockedState = 0 if cell.lockedState == 2 else cell.lockedState + 1
+						cell.applySprite(cell.cellStates[cell.lockedState])
 			
 				if cell.lockedState == 1:
 					flaggedCells += 1
@@ -261,7 +258,7 @@ class Minesweeper:
 						else:
 							self._checkCellNeighbours(self.cells.index(row), row.index(cell))
 					elif cell.isPressed:
-						cell.applySprite(cell.question if cell.lockedState == 2 else cell.normal)
+						cell.applySprite(cell.cellStates[cell.lockedState])
 
 					cell.isPressed = False
 

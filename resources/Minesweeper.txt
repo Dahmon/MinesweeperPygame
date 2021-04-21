@@ -17,7 +17,8 @@ bugs:
 
 
 TODO:
-[ ] Holding both mouse buttons should clear area
+[ ] 1. Optimize game, should be able to loop through all functions less times and pass the current cell to each function rather than looping in every one
+[ ] 2. Holding both mouse buttons should clear area
 [ ] Implement scaling, it is small
 [ ] Fix positioning of seconds display
 [ ] Do not count own cell as bomb, for if ratio is set to 1
