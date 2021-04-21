@@ -7,7 +7,7 @@ import math
 import pygame
 import sys
 import pickle
-# import pygame.locals for easier access to key coordinates
+from enum import Enum
 from pygame.locals import (
 	K_UP,
 	K_DOWN,
@@ -29,13 +29,19 @@ from classes import Face, Cell, Display, Button
 from settings import Settings
 from helpers import readOrCreatePickle, listToString
 
+class GameState(Enum):
+	LOST = 0
+	RUNNING = 1
+	WIN = 2
+	IDLE  = 3
+
 class Minesweeper:
 	def __init__(self):
 		# init game and assets 
 		pygame.init()
 		self.clock = pygame.time.Clock()
 		self.startTicks = pygame.time.get_ticks()
-		self.gameState = 3 # 0 = lost, 1 = running, 2 = win, 3 = idle
+		self.gameState = GameState.IDLE.value # 0 = lost, 1 = running, 2 = win, 3 = idle
 		self.clickCount = 0
 		self.revealedCellCount = 0
 
@@ -125,11 +131,16 @@ class Minesweeper:
 		# Ensure program maintains a rate of 30 frames per second
 		self.clock.tick(30)
 
-		if self.gameState == 1:
+		if self.gameState == GameState.RUNNING.value:
 			self.gameTime = (pygame.time.get_ticks() - self.startTicks) / 1000
 			self.timeDisplay.setDisplay(math.floor(self.gameTime))
 
 	def _resetGame(self):
+		# inc reset counter if reset during game
+		if self.gameState == GameState.RUNNING.value:
+			self.settings.resets += 1
+			pickle.dump(self.settings, open('save', 'wb'), pickle.HIGHEST_PROTOCOL)
+
 		for row in self.cells:
 			for cell in row:
 				cell.applySprite(cell.normal)
@@ -141,7 +152,7 @@ class Minesweeper:
 		self.bombCount = math.floor((self.settings.boardWidth * self.settings.boardHeight) * self.settings.bombRatio)
 		self.face.applySprite(self.face.smile)
 		self.flagDisplay.setDisplay(self.bombCount)
-		self.gameState = 3
+		self.gameState = GameState.IDLE.value
 		self.clickCount = 0
 		self.revealedCellCount = 0
 
@@ -223,13 +234,11 @@ class Minesweeper:
 
 	def _handleFaceMouseUp(self):
 		if self.face.isPressed and self.face.rect.collidepoint(pygame.mouse.get_pos()):
-			self.settings.resets += 1
-			pickle.dump(self.settings, open('save', 'wb'), pickle.HIGHEST_PROTOCOL)
 			self._resetGame()
 
-		if self.gameState == 2:
+		if self.gameState == GameState.WIN.value:
 			self.face.applySprite(self.face.win)
-		elif self.gameState == 0:
+		elif self.gameState == GameState.LOST.value:
 			self.face.applySprite(self.face.dead)
 		else:
 			self.face.applySprite(self.face.smile)
@@ -245,7 +254,7 @@ class Minesweeper:
 
 						if self.clickCount == 1:
 							self.startTicks = pygame.time.get_ticks()
-							self.gameState = 1
+							self.gameState = GameState.RUNNING.value
 
 						if cell.isBomb:
 							if self.clickCount == 1:
@@ -309,7 +318,7 @@ class Minesweeper:
 
 		# update game variables
 		self.face.applySprite(self.face.dead)
-		self.gameState = 0
+		self.gameState = GameState.LOST.value
 
 		for row in self.cells:
 			for cell in row:
@@ -349,7 +358,7 @@ class Minesweeper:
 
 			# update game variables
 			self.face.applySprite(self.face.win)
-			self.gameState = 2
+			self.gameState = GameState.WIN.value
 
 			for row in self.cells:
 				for cell in row:
