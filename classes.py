@@ -100,6 +100,7 @@ class Cell():
 		self.isBomb = False
 		# 0 = unlocked, 1 = flagged, 2 = question
 		self.lockedState = 0
+		self.neighbouringBombs = 0
 
 		self.cellSS = SpriteSheet('spritesheets/cell-sprites-2.png')
 

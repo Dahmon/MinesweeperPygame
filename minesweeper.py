@@ -106,19 +106,18 @@ class Minesweeper:
 				bombs += 1
 				cell.applySprite(cell.bomb if self.showBombs else cell.normal)
 
+		self._calculateNeighbouringBombs()
+
 	def _updateScreen(self):
 		# fill the background with white
 		# self.screen.fill((255, 255, 255))
 
 		# draw all sprites
-		for entity in self.sprites:
+		for entity in self.sprites + self.buttons:
 			self.screen.blit(entity.surf, entity.rect)
 
 		for display in self.displays:
 			self.screen.blit(display.displaySurface, (display.rect, 0))
-		
-		for button in self.buttons:
-			self.screen.blit(button.surf, button.rect)
 
 		# update the display
 		pygame.display.flip()
@@ -266,36 +265,41 @@ class Minesweeper:
 		for button in self.buttons:
 			button.handleMouseUp(event)
 
-	def _checkCellNeighbours(self, row, col):
-		cell = self.cells[row][col]
+	def _calculateNeighbouringBombs(self):
+		for row in self.cells:
+			for cell in row:
+				cell.neighbouringBombs = 0
+				rowIndex = self.cells.index(row)
+				cellIndex = row.index(cell)
+
+				for neighbourRow in (rowIndex - 1, rowIndex, rowIndex + 1):
+					if neighbourRow >= 0 and neighbourRow <= (self.settings.boardHeight - 1):
+						for neighbourCol in (cellIndex - 1, cellIndex, cellIndex + 1):
+							if neighbourCol >= 0 and neighbourCol <= (self.settings.boardWidth - 1):
+								# isOwnCell = neighbourRow == rowIndex and neighbourCol == cellIndex
+								if self.cells[neighbourRow][neighbourCol].isBomb:
+									cell.neighbouringBombs += 1
+
+	def _checkCellNeighbours(self, rowIndex, colIndex):
+		cell = self.cells[rowIndex][colIndex]
 		cell.isActive = False
 		self.revealedCellCount += 1
-		neighbouringBombs = 0
 
 		# Check win condition
 		self._checkWinCondition()
 
-		for neighbourRow in (row - 1, row, row + 1):
-			if neighbourRow >= 0 and neighbourRow <= (self.settings.boardHeight - 1):
-				for neighbourCol in (col - 1, col, col + 1):
-					if neighbourCol >= 0 and neighbourCol <= (self.settings.boardWidth - 1):
-						# TODO: Should not count self as bomb, for if ratio is set to 1
-						# if neighbourRow == row and not neighbourCol == col:
-						if self.cells[neighbourRow][neighbourCol].isBomb:
-							neighbouringBombs += 1
-
-		if neighbouringBombs == 0:
+		if cell.neighbouringBombs == 0:
 			cell.applySprite(cell.clicked)
-			for neighbourRow in (row - 1, row, row + 1):
+			for neighbourRow in (rowIndex - 1, rowIndex, rowIndex + 1):
 				if neighbourRow >= 0 and neighbourRow <= (self.settings.boardHeight - 1):
-					for neighbourCol in (col - 1, col, col + 1):
+					for neighbourCol in (colIndex - 1, colIndex, colIndex + 1):
 						if neighbourCol >= 0 and neighbourCol <= (self.settings.boardWidth - 1):
 							neighbourCell = self.cells[neighbourRow][neighbourCol]
 							if neighbourCell.isActive and not neighbourCell.lockedState == 1:
 								self._checkCellNeighbours(neighbourRow, neighbourCol)
 								neighbourCell.isActive = False
 		else:
-			cell.applySprite(cell.numberSprites[neighbouringBombs - 1])
+			cell.applySprite(cell.numberSprites[cell.neighbouringBombs - 1])
 
 	def _handleBombClick(self):
 		# update settings
