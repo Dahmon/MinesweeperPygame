@@ -53,6 +53,8 @@ class Minesweeper:
 		self.clickCount = 0
 		self.revealedCellCount = 0
 
+		self.showDialog = False
+
 		self._initUi()
 		self._initGame()
 
@@ -93,9 +95,10 @@ class Minesweeper:
 		self.button1 = Button((positionNextToFace, middleOfRow), self._onButton1Click)
 		self.button2 = Button((positionNextToFace + 24 * self.settings.scale, middleOfRow), self._onButton2Click)
 		self.button3 = Button((positionNextToFace + 48 * self.settings.scale, middleOfRow), self._onButton3Click)
-		self.buttons = [self.button1, self.button2, self.button3]
+		self.button4 = Button((positionNextToFace + 72 * self.settings.scale, middleOfRow), self.toggleDialog)
+		self.buttons = [self.button1, self.button2, self.button3, self.button4]
 
-		self.modal = ModalWindow()
+		self.modal = ModalWindow(self.toggleDialog)
 		# self.sprites.append(self.modal)
 
 	def _initGame(self):
@@ -127,6 +130,9 @@ class Minesweeper:
 	def _updateScreen(self):
 		# Ensure program maintains a rate of 30 frames per second
 		self.clock.tick(30)
+		
+		# fill the background with white
+		self.screen.fill((255, 255, 255))
 
 		if self.gameState == GameState.RUNNING.value:
 			self.gameTime = (pygame.time.get_ticks() - self.startTicks) / 1000
@@ -139,8 +145,9 @@ class Minesweeper:
 		for display in self.displays:
 			self.screen.blit(display.displaySurface, (display.rect, 0))
 
-		self.modal.updateModalUi()
-		# self.screen.blit(self.modal.surf, self.modal.rect)
+		if self.showDialog:
+			self.modal.updateModalUi()
+			self.screen.blit(self.modal.surf, self.modal.rect)
 
 		# update the display
 		pygame.display.flip()
@@ -370,6 +377,8 @@ class Minesweeper:
 		print('Use <Arrow Keys> to change the width and height of the board')
 		print('Use <Minus> and <Plus> to change the scale of the UI')
 		print('Use <B> to reveal/hide bombs')
+	def toggleDialog(self, event):
+		self.showDialog = not self.showDialog
 
 
 	def _checkWinCondition(self):

@@ -5,17 +5,21 @@ from spritesheet import SpriteSheet
 from helpers import readOrCreatePickle
 
 class ModalWindow():
-	def __init__(self):
+	def __init__(self, onClick):
+		self.onClick = onClick
 		self.settings = readOrCreatePickle('save', Settings())
-		self.surf = pygame.Surface((self.settings.boardWidth * 16 - 32, (self.settings.boardHeight * 16 + 60) - 32))
+		cellSize = 16 * self.settings.scale
+		self.surf = pygame.Surface((self.settings.boardWidth * cellSize - cellSize * 2, (self.settings.boardHeight * cellSize + (60 * self.settings.scale)) - cellSize * 2))
+		# self.surf = pygame.Surface((self.settings.boardWidth * 16 - 32, (self.settings.boardHeight * 16 + 60) - 32))
 		self.surf.fill((0,255,0))
 		# self.surf.set_colorkey((255, 255, 255), pygame.RLEACCEL)
-		self.rect = self.surf.get_rect(topleft=(16,16))
+		self.rect = self.surf.get_rect(topleft=(cellSize,cellSize))
 
-		self.closeButton = Button((16, 16), self._onButtonClick)
+		newRect = self.surf.get_rect(topleft=(cellSize,cellSize))
+		self.closeButton = Button((newRect.x, newRect.y), self._onButtonClick)
 
 	def _onButtonClick(self, event):
-		print('Modal button')
+		self.onClick(event)
 
 	def updateModalUi(self):
 		self.surf.blit(self.closeButton.surf, self.closeButton.rect)

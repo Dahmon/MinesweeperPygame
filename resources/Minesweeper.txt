@@ -7,6 +7,7 @@ Bugs:
 TODO:
 [ ] 1. Optimize game, should be able to loop through all functions less times and pass the current cell to each function rather than looping in every one
 	[x] Precalculate cell neighbouring bombs on bomb creation
+	[ ] Simplify cells array by making 1 dimensional and give each cell a position property that would have been equal to the array indexes
 [ ] 2. Holding both mouse buttons should clear area
 	- Might do Ctrl + Mouse Left
 [ ] Implement scaling, it is small
