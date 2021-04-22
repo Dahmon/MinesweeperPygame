@@ -16,6 +16,8 @@ from pygame.locals import (
 	K_ESCAPE,
 	K_LCTRL,
 	K_b,
+	K_MINUS,
+	K_EQUALS,
 	KEYDOWN,
 	KEYUP,
 	QUIT,
@@ -41,15 +43,15 @@ class Minesweeper:
 		pygame.init()
 		self.clock = pygame.time.Clock()
 		self.startTicks = pygame.time.get_ticks()
+		self.gameTime = float()
 		self.gameState = GameState.IDLE.value # 0 = lost, 1 = running, 2 = win, 3 = idle
-		self.clickCount = 0
-		self.revealedCellCount = 0
 
 		# set up variables
 		self.settings = readOrCreatePickle('save', Settings())
 		self.bombCount = self.settings.getBombCount()
-		self.faceButtonRowHeight = 60
 		self.showBombs = False
+		self.clickCount = 0
+		self.revealedCellCount = 0
 
 		self._initUi()
 		self._initGame()
@@ -62,8 +64,10 @@ class Minesweeper:
 			self._updateScreen()
 
 	def _initUi(self):
-		SCREEN_WIDTH = self.settings.boardWidth * 16
-		SCREEN_HEIGHT = self.settings.boardHeight * 16 + self.faceButtonRowHeight
+		self.faceButtonRowHeight = 60 * self.settings.scale
+		middleOfRow = (self.faceButtonRowHeight / 2)
+		SCREEN_WIDTH = int((self.settings.boardWidth * 16) * self.settings.scale)
+		SCREEN_HEIGHT = int(((self.settings.boardHeight * 16) * self.settings.scale) + self.faceButtonRowHeight) 
 
 		# set up the drawing window
 		self.screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
@@ -72,21 +76,23 @@ class Minesweeper:
 		pygame.display.set_caption('Minesweeper')
 
 		self.displays = []
-		self.flagDisplay = Display(0)
+		self.flagDisplay = Display(0, self.settings.displayLength)
 		self.flagDisplay.setDisplay(self.bombCount)
 		self.displays.append(self.flagDisplay)
-		self.timeDisplay = Display(SCREEN_WIDTH - 52)
+		self.timeDisplay = Display((SCREEN_WIDTH - (self.settings.displayLength * 13) * self.settings.scale), self.settings.displayLength)
 		self.timeDisplay.setDisplay(0)
 		self.displays.append(self.timeDisplay)
 
 		self.sprites = []
 		# set up face and sprites
-		self.face = Face(((SCREEN_WIDTH - 24) / 2, 30))
+		self.face = Face((SCREEN_WIDTH / 2, middleOfRow))
 		self.sprites.append(self.face)
 
-		self.button1 = Button((80, 30), self._onButton1Click)
-		self.button2 = Button((104, 30), self._onButton2Click)
-		self.button3 = Button((128, 30), self._onButton3Click)
+		distanceFromFace = 12 * self.settings.scale
+		positionNextToFace = ((SCREEN_WIDTH / 2) + 24 * self.settings.scale) + distanceFromFace
+		self.button1 = Button((positionNextToFace, middleOfRow), self._onButton1Click)
+		self.button2 = Button((positionNextToFace + 24 * self.settings.scale, middleOfRow), self._onButton2Click)
+		self.button3 = Button((positionNextToFace + 48 * self.settings.scale, middleOfRow), self._onButton3Click)
 		self.buttons = [self.button1, self.button2, self.button3]
 
 		self.modal = ModalWindow()
@@ -97,7 +103,8 @@ class Minesweeper:
 		for row in range(self.settings.boardHeight):
 			self.cells.append([])
 			for col in range(self.settings.boardWidth):
-				cell = Cell(col * 16, (row * 16) + self.faceButtonRowHeight)
+				cellSize = 16 * self.settings.scale
+				cell = Cell((col * cellSize), (row * cellSize) + self.faceButtonRowHeight)
 				self.sprites.append(cell)
 				self.cells[row].append(cell)
 		
@@ -121,8 +128,8 @@ class Minesweeper:
 		# Ensure program maintains a rate of 30 frames per second
 		self.clock.tick(30)
 
-		self.gameTime = (pygame.time.get_ticks() - self.startTicks) / 1000
 		if self.gameState == GameState.RUNNING.value:
+			self.gameTime = (pygame.time.get_ticks() - self.startTicks) / 1000
 			self.timeDisplay.setDisplay(math.floor(self.gameTime))
 
 		# draw all sprites
@@ -182,6 +189,15 @@ class Minesweeper:
 						if cell.isBomb:
 							cell.applySprite(cell.bomb if self.showBombs else cell.cellStates[cell.lockedState])
 			
+			if event.type == KEYDOWN and event.key in (K_MINUS, K_EQUALS):
+				if event.key == K_EQUALS:
+					self.settings.scale += 0.25
+				if event.key == K_MINUS:
+					self.settings.scale -= 0.25
+
+				pickle.dump(self.settings, open('save', 'wb'), pickle.HIGHEST_PROTOCOL)
+				self._resetGame()
+
 			if event.type == KEYDOWN and event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
 				if event.key == K_UP:
 					self.settings.boardHeight -= 1
@@ -336,7 +352,7 @@ class Minesweeper:
 							cell.applySprite(cell.bombClicked)
 						else:
 							cell.applySprite(cell.bomb)
-				elif cell.lockedState:
+				elif cell.lockedState == 1:
 					cell.applySprite(cell.bombIncorrect)
 
 	def _onButton1Click(self, event):
@@ -351,7 +367,9 @@ class Minesweeper:
 		self._resetGame()
 		print('Settings reset')
 	def _onButton3Click(self, event):
-		print('Button 3')
+		print('Use <Arrow Keys> to change the width and height of the board')
+		print('Use <Minus> and <Plus> to change the scale of the UI')
+		print('Use <B> to reveal/hide bombs')
 
 
 	def _checkWinCondition(self):

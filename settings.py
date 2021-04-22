@@ -9,6 +9,9 @@ class Settings():
 		self.losses = 0
 		self.resets = 0
 
+		self.scale = 1
+		self.displayLength = 4
+
 		self.winLengths = []
 		self.lossLengths = []
 	

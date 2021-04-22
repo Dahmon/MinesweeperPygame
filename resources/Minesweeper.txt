@@ -1,5 +1,8 @@
-bugs:
-[ ] _handleCellMouseUp not setting cell isBomb to false when bombRatio is 1
+Idea:
+
+Bugs:
+[ ] Scaling resets entire game
+[ ] Face does not show :o when clicking on inactive cells
 
 TODO:
 [ ] 1. Optimize game, should be able to loop through all functions less times and pass the current cell to each function rather than looping in every one

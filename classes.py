@@ -27,7 +27,7 @@ class ModalWindow():
 			self.closeButton.handleMouseUp(event)
 
 class Display():
-	def __init__(self, rect, length = 4):
+	def __init__(self, rect, length):
 		self.rect = rect
 		self.length = length
 		self.numberSS = SpriteSheet('spritesheets/number-sprites.png')
@@ -44,9 +44,12 @@ class Display():
 			(104,0,13,23),
 			(117,0,13,23),
 		]
+		
+		self.scale = readOrCreatePickle('save', Settings()).scale
+		self.spriteSize = (int(13 * self.scale), int(23 * self.scale))
 
 		self.digits = [None] * self.length
-		self.displaySurface = pygame.Surface((13 * self.length,23))
+		self.displaySurface = pygame.Surface(((13 * self.scale) * self.length, 23 * self.scale))
 
 	def setDisplay(self, number):
 		paddedNumber = str(math.trunc(number)).zfill(self.length)
@@ -57,34 +60,38 @@ class Display():
 				self.digits[index] = self.numberSS.image_at(self.negative)
 			else:
 				spriteIndex = int(paddedNumber[index])
-				self.displaySurface.blit(self.numberSS.image_at(self.numberSprites[spriteIndex]), (13 * index, 0))
+				self.displaySurface.blit(pygame.transform.scale(self.numberSS.image_at(self.numberSprites[spriteIndex]), self.spriteSize), ((13 * self.scale) * index, 0))
 
 class Button():
 	def __init__(self, pos, onMouseUp):
 		self.onMouseUp = onMouseUp
+		
+		self.scale = readOrCreatePickle('save', Settings()).scale
+		self.spriteSize = (int(24 * self.scale), int(24 * self.scale))
 
 		self.buttonSS = SpriteSheet('spritesheets/button-sprites.png')
 		self.blank = (0,0,24,24)
 		self.blankPressed = (24,0,24,24)
+		self.disabled = (48,0,24,24)
 
-		self.surf = self.buttonSS.image_at(self.blank)
-		self.surf.set_colorkey((255, 255, 255), pygame.RLEACCEL)
+		self.surf = pygame.transform.scale(self.buttonSS.image_at(self.blank), self.spriteSize)
+		self.surf.set_colorkey((0, 0, 0), pygame.RLEACCEL)
 		self.rect = self.surf.get_rect(center=(pos))
 
 		self.isPressed = False
 
 	def applySprite(self, sprite):
-		self.surf = self.buttonSS.image_at(sprite)
+		self.surf = pygame.transform.scale(self.buttonSS.image_at(sprite), self.spriteSize)
 	
 	def handleMouseDown(self, event):
 		if event.button == 1 and self.rect.collidepoint(pygame.mouse.get_pos()):
 			self.isPressed = True
-			self.surf = self.buttonSS.image_at(self.blankPressed)
+			self.surf = pygame.transform.scale(self.buttonSS.image_at(self.blankPressed), self.spriteSize)
 
 	def handleMouseUp(self, event):
 		if self.isPressed:
 			self.isPressed = False
-			self.surf = self.buttonSS.image_at(self.blank)
+			self.surf = pygame.transform.scale(self.buttonSS.image_at(self.blank), self.spriteSize)
 
 			if self.rect.collidepoint(pygame.mouse.get_pos()):
 				self.onMouseUp(event)
@@ -92,7 +99,8 @@ class Button():
 
 class Face():
 	def __init__(self, pos):
-		self.isPressed = False
+		self.scale = readOrCreatePickle('save', Settings()).scale
+		self.spriteSize = (int(24 * self.scale), int(24 * self.scale))
 
 		self.faceSS = SpriteSheet('spritesheets/face-sprites.png')
 		self.smile = (0,0,24,24)
@@ -101,16 +109,22 @@ class Face():
 		self.win = (72,0,24,24)
 		self.dead = (96,0,24,24)
 
-		self.surf = self.faceSS.image_at(self.smile)
+		self.isPressed = False
+
+		self.surf = pygame.transform.scale(self.faceSS.image_at(self.smile), self.spriteSize)
 		self.surf.set_colorkey((255, 255, 255), pygame.RLEACCEL)
 		self.rect = self.surf.get_rect(center=(pos))
+		
+		# x, y = pos
+		# self.rect = self.surf.get_rect(center=(x, y * self.scale))
 
 	def applySprite(self, sprite):
-		self.surf = self.faceSS.image_at(sprite)
-
+		self.surf = pygame.transform.scale(self.faceSS.image_at(sprite), self.spriteSize)
 
 class Cell():
 	def __init__(self, x, y):
+		self.scale = readOrCreatePickle('save', Settings()).scale
+		self.spriteSize = (int(16 * self.scale), int(16 * self.scale))
 		# Cell state
 		self.isActive = True
 		self.isPressed = False
@@ -119,7 +133,7 @@ class Cell():
 		self.lockedState = 0
 		self.neighbouringBombs = 0
 
-		self.cellSS = SpriteSheet('spritesheets/cell-sprites-2.png')
+		self.cellSS = SpriteSheet('spritesheets/cell-sprites.png')
 
 		# cell sprites
 		self.normal = (0,0,16,16)
@@ -148,10 +162,12 @@ class Cell():
 			self.question
 		]
 
-		self.surf = self.cellSS.image_at((0,0,16,16))
-		self.surf.set_colorkey((255, 255, 255), pygame.RLEACCEL)
-
-		self.rect = self.surf.get_rect(center=(x+8, y+8))
+		self.surf = pygame.transform.scale(self.cellSS.image_at(self.normal), self.spriteSize)
+		self.surf.set_colorkey((0, 0, 0), pygame.RLEACCEL)
+	
+		self.rect = self.surf.get_rect(topleft=(x, y))
 
 	def applySprite(self, sprite):
-		self.surf = self.cellSS.image_at(sprite)
+		scale = readOrCreatePickle('save', Settings()).scale
+		spriteSize = (int(16 * scale), int(16 * scale))
+		self.surf = pygame.transform.scale(self.cellSS.image_at(sprite), spriteSize)
