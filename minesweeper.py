@@ -25,7 +25,7 @@ from pygame.locals import (
 )
 
 # Import classes
-from classes import Face, Cell, Display, Button
+from classes import Face, Cell, Display, Button, ModalWindow
 from settings import Settings
 from helpers import readOrCreatePickle, listToString
 
@@ -89,6 +89,9 @@ class Minesweeper:
 		self.button3 = Button((128, 30), self._onButton3Click)
 		self.buttons = [self.button1, self.button2, self.button3]
 
+		self.modal = ModalWindow()
+		# self.sprites.append(self.modal)
+
 	def _initGame(self):
 		self.cells = []
 		for row in range(self.settings.boardHeight):
@@ -115,8 +118,12 @@ class Minesweeper:
 		self._calculateNeighbouringBombs()
 
 	def _updateScreen(self):
-		# fill the background with white
-		# self.screen.fill((255, 255, 255))
+		# Ensure program maintains a rate of 30 frames per second
+		self.clock.tick(30)
+
+		if self.gameState == GameState.RUNNING.value:
+			self.gameTime = (pygame.time.get_ticks() - self.startTicks) / 1000
+			self.timeDisplay.setDisplay(math.floor(self.gameTime))
 
 		# draw all sprites
 		for entity in self.sprites + self.buttons:
@@ -125,15 +132,11 @@ class Minesweeper:
 		for display in self.displays:
 			self.screen.blit(display.displaySurface, (display.rect, 0))
 
+		self.modal.updateModalUi()
+		# self.screen.blit(self.modal.surf, self.modal.rect)
+
 		# update the display
 		pygame.display.flip()
-
-		# Ensure program maintains a rate of 30 frames per second
-		self.clock.tick(30)
-
-		if self.gameState == GameState.RUNNING.value:
-			self.gameTime = (pygame.time.get_ticks() - self.startTicks) / 1000
-			self.timeDisplay.setDisplay(math.floor(self.gameTime))
 
 	def _resetGame(self):
 		# inc reset counter if reset during game
@@ -164,6 +167,8 @@ class Minesweeper:
 	def _checkEvents(self):
 		# loop through all events in queue
 		for event in pygame.event.get():
+			self.modal.handleEvents(event)
+
 			# did the user click the window close button?
 			if event.type == QUIT:
 				# quit pygame and exit

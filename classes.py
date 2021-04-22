@@ -1,6 +1,30 @@
 import pygame
 import math
+from settings import Settings
 from spritesheet import SpriteSheet
+from helpers import readOrCreatePickle
+
+class ModalWindow():
+	def __init__(self):
+		self.settings = readOrCreatePickle('save', Settings())
+		self.surf = pygame.Surface((self.settings.boardWidth * 16 - 32, (self.settings.boardHeight * 16 + 60) - 32))
+		self.surf.fill((0,255,0))
+		# self.surf.set_colorkey((255, 255, 255), pygame.RLEACCEL)
+		self.rect = self.surf.get_rect(topleft=(16,16))
+
+		self.closeButton = Button((16, 16), self._onButtonClick)
+
+	def _onButtonClick(self, event):
+		print('Modal button')
+
+	def updateModalUi(self):
+		self.surf.blit(self.closeButton.surf, self.closeButton.rect)
+
+	def handleEvents(self, event):
+		if event.type == pygame.MOUSEBUTTONDOWN:
+			self.closeButton.handleMouseDown(event)
+		if event.type == pygame.MOUSEBUTTONUP:
+			self.closeButton.handleMouseUp(event)
 
 class Display():
 	def __init__(self, rect, length = 4):
@@ -39,30 +63,31 @@ class Button():
 	def __init__(self, pos, onMouseUp):
 		self.onMouseUp = onMouseUp
 
-		self.faceSS = SpriteSheet('spritesheets/button-sprites.png')
+		self.buttonSS = SpriteSheet('spritesheets/button-sprites.png')
 		self.blank = (0,0,24,24)
 		self.blankPressed = (24,0,24,24)
 
-		self.surf = self.faceSS.image_at(self.blank)
+		self.surf = self.buttonSS.image_at(self.blank)
 		self.surf.set_colorkey((255, 255, 255), pygame.RLEACCEL)
 		self.rect = self.surf.get_rect(center=(pos))
 
 		self.isPressed = False
 
 	def applySprite(self, sprite):
-		self.surf = self.faceSS.image_at(sprite)
+		self.surf = self.buttonSS.image_at(sprite)
 	
 	def handleMouseDown(self, event):
 		if event.button == 1 and self.rect.collidepoint(pygame.mouse.get_pos()):
 			self.isPressed = True
-			self.surf = self.faceSS.image_at(self.blankPressed)
+			self.surf = self.buttonSS.image_at(self.blankPressed)
 
 	def handleMouseUp(self, event):
 		if self.isPressed:
 			self.isPressed = False
-			self.surf = self.faceSS.image_at(self.blank)
+			self.surf = self.buttonSS.image_at(self.blank)
 
-			self.onMouseUp(event)
+			if self.rect.collidepoint(pygame.mouse.get_pos()):
+				self.onMouseUp(event)
 
 
 class Face():
