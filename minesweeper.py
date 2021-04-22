@@ -47,7 +47,7 @@ class Minesweeper:
 
 		# set up variables
 		self.settings = readOrCreatePickle('save', Settings())
-		self.bombCount = math.floor((self.settings.boardWidth * self.settings.boardHeight) * self.settings.bombRatio)
+		self.bombCount = self.settings.getBombCount()
 		self.faceButtonRowHeight = 60
 		self.showBombs = False
 
@@ -81,7 +81,7 @@ class Minesweeper:
 
 		self.sprites = []
 		# set up face and sprites
-		self.face = Face(SCREEN_WIDTH)
+		self.face = Face(((SCREEN_WIDTH - 24) / 2, 30))
 		self.sprites.append(self.face)
 
 		self.button1 = Button((80, 30), self._onButton1Click)
@@ -110,7 +110,7 @@ class Minesweeper:
 			randomCol = random.randint(0, self.settings.boardWidth - 1)
 
 			cell = self.cells[randomRow][randomCol]
-			if not cell.isBomb:
+			if not cell.isBomb and cell.isActive:
 				cell.isBomb = True
 				bombs += 1
 				cell.applySprite(cell.bomb if self.showBombs else cell.normal)
@@ -121,8 +121,8 @@ class Minesweeper:
 		# Ensure program maintains a rate of 30 frames per second
 		self.clock.tick(30)
 
+		self.gameTime = (pygame.time.get_ticks() - self.startTicks) / 1000
 		if self.gameState == GameState.RUNNING.value:
-			self.gameTime = (pygame.time.get_ticks() - self.startTicks) / 1000
 			self.timeDisplay.setDisplay(math.floor(self.gameTime))
 
 		# draw all sprites
@@ -152,7 +152,7 @@ class Minesweeper:
 				cell.isPressed = False
 				cell.lockedState = 0
 
-		self.bombCount = math.floor((self.settings.boardWidth * self.settings.boardHeight) * self.settings.bombRatio)
+		self.bombCount = self.settings.getBombCount()
 		self.face.applySprite(self.face.smile)
 		self.flagDisplay.setDisplay(self.bombCount)
 		self.gameState = GameState.IDLE.value
@@ -264,6 +264,7 @@ class Minesweeper:
 						if cell.isBomb:
 							if self.clickCount == 1:
 								cell.isBomb = False
+								cell.isActive = False
 								self._generateBombs(1)
 								self._checkCellNeighbours(self.cells.index(row), row.index(cell))
 							else:

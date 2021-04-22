@@ -91,11 +91,10 @@ class Button():
 
 
 class Face():
-	def __init__(self, SCREEN_WIDTH):
+	def __init__(self, pos):
 		self.isPressed = False
 
 		self.faceSS = SpriteSheet('spritesheets/face-sprites.png')
-
 		self.smile = (0,0,24,24)
 		self.clicked = (24,0,24,24)
 		self.cellPushed = (48,0,24,24)
@@ -104,17 +103,10 @@ class Face():
 
 		self.surf = self.faceSS.image_at(self.smile)
 		self.surf.set_colorkey((255, 255, 255), pygame.RLEACCEL)
-
-		self.rect = self.surf.get_rect(
-			center=(
-				(SCREEN_WIDTH-self.surf.get_width())/2,
-				30
-			)
-		)
+		self.rect = self.surf.get_rect(center=(pos))
 
 	def applySprite(self, sprite):
 		self.surf = self.faceSS.image_at(sprite)
-
 
 
 class Cell():

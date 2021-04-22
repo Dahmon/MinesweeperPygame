@@ -1,3 +1,5 @@
+import math
+
 class Settings():
 	def __init__(self):
 		self.boardWidth = 30
@@ -9,3 +11,7 @@ class Settings():
 
 		self.winLengths = []
 		self.lossLengths = []
+	
+	def getBombCount(self):
+		cellCount = self.boardWidth * self.boardHeight
+		return min(math.floor((self.boardWidth * self.boardHeight) * self.bombRatio), cellCount - 1)

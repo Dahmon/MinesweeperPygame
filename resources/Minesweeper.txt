@@ -8,9 +8,10 @@ TODO:
 	- Might do Ctrl + Mouse Left
 [ ] Implement scaling, it is small
 [ ] Fix positioning of displays to be inline with Face
-[ ] Do not count own cell as bomb, for if ratio is set to 1
+[x] Do not count own cell as bomb, for if ratio is set to 1
+	- Fixed by ensuring there is always 2 free cells!
 	- I would guess this happens because on first click, if it's a bomb it moves somewhere else and a new bomb is placed.
 		The same cell is the only non-bomb cell, so might become a bomb again before set inactive
-[ ] Fix Face class rect init
+[x] Fix Face class rect init (Don't like having to pass SCREEN_WIDTH, should calculate and pass center)
 [x] Fix number rendering
 	- How a new Surface is created and all digits are blitted onto it before being rendered on the screen
