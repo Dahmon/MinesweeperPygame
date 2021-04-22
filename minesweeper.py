@@ -368,6 +368,8 @@ class Minesweeper:
 		print('Resets: ' + str(self.settings.resets))
 		print('Win Lengths: ' + listToString(self.settings.winLengths))
 		print('Loss Lengths: ' + listToString(self.settings.lossLengths))
+		print('----')
+		print('Scale: ' + str(self.settings.scale))
 	def _onButton2Click(self, event):
 		self.settings = Settings()
 		pickle.dump(self.settings, open('save', 'wb'), pickle.HIGHEST_PROTOCOL)

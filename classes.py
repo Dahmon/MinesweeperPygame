@@ -9,13 +9,23 @@ class ModalWindow():
 		self.onClick = onClick
 		self.settings = readOrCreatePickle('save', Settings())
 		cellSize = 16 * self.settings.scale
-		self.surf = pygame.Surface((self.settings.boardWidth * cellSize - cellSize * 2, (self.settings.boardHeight * cellSize + (60 * self.settings.scale)) - cellSize * 2))
-		# self.surf = pygame.Surface((self.settings.boardWidth * 16 - 32, (self.settings.boardHeight * 16 + 60) - 32))
-		self.surf.fill((0,255,0))
-		# self.surf.set_colorkey((255, 255, 255), pygame.RLEACCEL)
-		self.rect = self.surf.get_rect(topleft=(cellSize,cellSize))
 
-		newRect = self.surf.get_rect(topleft=(cellSize,cellSize))
+		self.surf = pygame.Surface((self.settings.boardWidth * cellSize, (self.settings.boardHeight * cellSize) + 60 * self.settings.scale))
+		self.surf.set_colorkey((255,255,255), pygame.SRCALPHA)
+		self.surf.fill((255,255,255))
+		self.rect = self.surf.get_rect(topleft=(0,0))
+
+		# self.surf = pygame.Surface((self.settings.boardWidth * cellSize - cellSize * 2, (self.settings.boardHeight * cellSize + (60 * self.settings.scale)) - cellSize * 2))
+		# self.surf = pygame.Surface((self.settings.boardWidth * 16 - 32, (self.settings.boardHeight * 16 + 60) - 32))
+		# self.surf.set_colorkey((255, 255, 255), pygame.RLEACCEL)
+
+		self.surf2 = pygame.Surface((self.settings.boardWidth * cellSize - cellSize * 2, (self.settings.boardHeight * cellSize + (60 * self.settings.scale)) - cellSize * 2))
+		self.surf2.fill((0,0,255))
+		self.surf.blit(self.surf2, self.surf.get_rect(topleft=(cellSize,cellSize)))
+
+		buttonSize = int(24 * self.settings.scale)
+		buttonPosition = (cellSize + buttonSize / 2) + cellSize
+		newRect = self.surf.get_rect(topleft=(buttonPosition,buttonPosition))
 		self.closeButton = Button((newRect.x, newRect.y), self._onButtonClick)
 
 	def _onButtonClick(self, event):
