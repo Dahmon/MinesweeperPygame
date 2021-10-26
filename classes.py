@@ -10,17 +10,16 @@ class ModalWindow():
 		self.settings = readOrCreatePickle('save', Settings())
 		cellSize = 16 * self.settings.scale
 
+		pygame.font.init()
+		self.font = pygame.font.SysFont('Comic Sans MS', 20)
+
 		self.surf = pygame.Surface((self.settings.boardWidth * cellSize, (self.settings.boardHeight * cellSize) + 60 * self.settings.scale))
 		self.surf.set_colorkey((255,255,255), pygame.SRCALPHA)
 		self.surf.fill((255,255,255))
 		self.rect = self.surf.get_rect(topleft=(0,0))
 
-		# self.surf = pygame.Surface((self.settings.boardWidth * cellSize - cellSize * 2, (self.settings.boardHeight * cellSize + (60 * self.settings.scale)) - cellSize * 2))
-		# self.surf = pygame.Surface((self.settings.boardWidth * 16 - 32, (self.settings.boardHeight * 16 + 60) - 32))
-		# self.surf.set_colorkey((255, 255, 255), pygame.RLEACCEL)
-
 		self.surf2 = pygame.Surface((self.settings.boardWidth * cellSize - cellSize * 2, (self.settings.boardHeight * cellSize + (60 * self.settings.scale)) - cellSize * 2))
-		self.surf2.fill((0,0,255))
+		self.surf2.fill((250,250,250))
 		self.surf.blit(self.surf2, self.surf.get_rect(topleft=(cellSize,cellSize)))
 
 		buttonSize = int(24 * self.settings.scale)
@@ -33,6 +32,7 @@ class ModalWindow():
 
 	def updateModalUi(self):
 		self.surf.blit(self.closeButton.surf, self.closeButton.rect)
+		self.surf.blit(self.font.render('Scale: ' + str(self.settings.scale), False, (0, 0, 0)), (self.closeButton.rect.x + 40, self.closeButton.rect.y))
 
 	def handleEvents(self, event):
 		if event.type == pygame.MOUSEBUTTONDOWN:

@@ -128,11 +128,11 @@ class Minesweeper:
 		self._calculateNeighbouringBombs()
 
 	def _updateScreen(self):
-		# Ensure program maintains a rate of 30 frames per second
-		self.clock.tick(30)
-		
 		# fill the background with white
 		self.screen.fill((255, 255, 255))
+
+		# Ensure program maintains a rate of 30 frames per second
+		self.clock.tick(30)		
 
 		if self.gameState == GameState.RUNNING.value:
 			self.gameTime = (pygame.time.get_ticks() - self.startTicks) / 1000
