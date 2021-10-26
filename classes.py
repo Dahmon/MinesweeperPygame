@@ -1,12 +1,14 @@
 import pygame
 import math
+import pickle
 from settings import Settings
 from spritesheet import SpriteSheet
 from helpers import readOrCreatePickle
 
 class ModalWindow():
-	def __init__(self, onClick):
-		self.onClick = onClick
+	def __init__(self, toggleDialog, resetGame):
+		self.toggleDialog = toggleDialog
+		self.resetGame = resetGame
 		self.settings = readOrCreatePickle('save', Settings())
 		self.cellSize = 16 * self.settings.scale
 		self.open = False
@@ -26,17 +28,24 @@ class ModalWindow():
 		buttonSize = int(24 * self.settings.scale)
 		buttonPosition = (self.cellSize + buttonSize / 2) + self.cellSize
 		newRect = self.surf.get_rect(topleft=(buttonPosition,buttonPosition))
-		self.closeButton = Button((newRect.x, newRect.y), self._onButtonClick)
+		self.closeButton = Button((newRect.x, newRect.y), self.toggleDialog)
+		self.resetButton = Button((newRect.x, newRect.y + (self.cellSize * 14)), self._resetSettings)
 
-	def _onButtonClick(self, event):
-		self.onClick(event)
+	def _resetSettings(self):
+		self.settings = Settings()
+		pickle.dump(self.settings, open('save', 'wb'), pickle.HIGHEST_PROTOCOL)
+		self.resetGame()
+		print('Settings reset')
 
 	def toggleOpen(self):
 		self.open = not self.open
 
 	def updateModalUi(self, screen):
 		if self.open:
+			# Butons
 			self.surf.blit(self.closeButton.surf, self.closeButton.rect)
+			self.surf.blit(self.resetButton.surf, self.resetButton.rect)
+			# Settings info
 			self.surf.blit(self.font.render('Wins: ' + str(self.settings.wins), False, (0, 0, 0)), (self.cellSize * 2, self.cellSize * 4))
 			self.surf.blit(self.font.render('Losses: ' + str(self.settings.losses), False, (0, 0, 0)), (self.cellSize * 10, self.cellSize * 4))
 			self.surf.blit(self.font.render('Resets: ' + str(self.settings.resets), False, (0, 0, 0)), (self.cellSize * 20, self.cellSize * 4))
@@ -50,8 +59,10 @@ class ModalWindow():
 		if self.open:
 			if event.type == pygame.MOUSEBUTTONDOWN:
 				self.closeButton.handleMouseDown(event)
+				self.resetButton.handleMouseDown(event)
 			if event.type == pygame.MOUSEBUTTONUP:
 				self.closeButton.handleMouseUp(event)
+				self.resetButton.handleMouseUp(event)
 
 class Display():
 	def __init__(self, rect, length):
@@ -124,7 +135,7 @@ class Button():
 			self.surf = pygame.transform.scale(self.buttonSS.image_at(self.buttonSprites[self.type][0]), self.spriteSize)
 
 			if self.rect.collidepoint(pygame.mouse.get_pos()):
-				self.onMouseUp(event)
+				self.onMouseUp()
 
 
 class Face():

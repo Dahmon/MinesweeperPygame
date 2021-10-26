@@ -36,6 +36,7 @@ class GameState(Enum):
 	RUNNING = 1
 	WIN = 2
 	IDLE  = 3
+	LOCKED = 4
 
 class Minesweeper:
 	def __init__(self):
@@ -45,6 +46,7 @@ class Minesweeper:
 		self.startTicks = pygame.time.get_ticks()
 		self.gameTime = float()
 		self.gameState = GameState.IDLE.value # 0 = lost, 1 = running, 2 = win, 3 = idle
+		self.gameStatePrev = self.gameState
 
 		# set up variables
 		self.settings = readOrCreatePickle('save', Settings())
@@ -90,13 +92,11 @@ class Minesweeper:
 
 		distanceFromFace = 12 * self.settings.scale
 		positionNextToFace = ((SCREEN_WIDTH / 2) + 24 * self.settings.scale) + distanceFromFace
-		button1 = Button((positionNextToFace, middleOfRow), self._onButton1Click)
-		button2 = Button((positionNextToFace + 24 * self.settings.scale, middleOfRow), self._onButton2Click)
-		button3 = Button((positionNextToFace + 48 * self.settings.scale, middleOfRow), self._onButton3Click)
-		button4 = Button((positionNextToFace + 72 * self.settings.scale, middleOfRow), self.toggleDialog, 'config')
-		self.buttons = [button1, button2, button3, button4]
+		controlsButton = Button((positionNextToFace, middleOfRow), self._showControls)
+		configButton = Button((positionNextToFace + 24 * self.settings.scale, middleOfRow), self.toggleDialog, 'config')
+		self.buttons = [controlsButton, configButton]
 
-		self.modal = ModalWindow(self.toggleDialog)
+		self.modal = ModalWindow(self.toggleDialog, self.resetGame)
 		# self.sprites.append(self.modal)
 
 	def _initGame(self):
@@ -130,7 +130,7 @@ class Minesweeper:
 		self.screen.fill((255, 255, 255))
 
 		# Ensure program maintains a rate of 30 frames per second
-		self.clock.tick(30)		
+		self.clock.tick(30)
 
 		if self.gameState == GameState.RUNNING.value:
 			self.gameTime = (pygame.time.get_ticks() - self.startTicks) / 1000
@@ -148,7 +148,7 @@ class Minesweeper:
 		# update the display
 		pygame.display.flip()
 
-	def _resetGame(self):
+	def resetGame(self):
 		# inc reset counter if reset during game
 		if self.gameState == GameState.RUNNING.value:
 			self.settings.resets += 1
@@ -199,7 +199,7 @@ class Minesweeper:
 					self.settings.scale -= 0.25
 
 				pickle.dump(self.settings, open('save', 'wb'), pickle.HIGHEST_PROTOCOL)
-				self._resetGame()
+				self.resetGame()
 
 			if event.type == KEYDOWN and event.key in (K_UP, K_DOWN, K_LEFT, K_RIGHT):
 				if event.key == K_UP:
@@ -212,9 +212,9 @@ class Minesweeper:
 					self.settings.boardWidth += 1
 
 				pickle.dump(self.settings, open('save', 'wb'), pickle.HIGHEST_PROTOCOL)
-				self._resetGame()
+				self.resetGame()
 
-			if event.type == MOUSEBUTTONDOWN:
+			if event.type == MOUSEBUTTONDOWN and self.gameState != GameState.LOCKED.value:
 				self._handleFaceMouseDown(event)
 				self._handleCellMouseDown(event)
 				self._handleButtonMouseDown(event)
@@ -258,7 +258,7 @@ class Minesweeper:
 
 	def _handleFaceMouseUp(self):
 		if self.face.isPressed and self.face.rect.collidepoint(pygame.mouse.get_pos()):
-			self._resetGame()
+			self.resetGame()
 
 		if self.gameState == GameState.WIN.value:
 			self.face.applySprite(self.face.win)
@@ -358,24 +358,15 @@ class Minesweeper:
 				elif cell.lockedState == 1:
 					cell.applySprite(cell.bombIncorrect)
 
-	def _onButton1Click(self, event):
-		print('Wins: ' + str(self.settings.wins))
-		print('Losses: ' + str(self.settings.losses))
-		print('Resets: ' + str(self.settings.resets))
-		print('Win Lengths: ' + listToString(self.settings.winLengths))
-		print('Loss Lengths: ' + listToString(self.settings.lossLengths))
-		print('----')
-		print('Scale: ' + str(self.settings.scale))
-	def _onButton2Click(self, event):
-		self.settings = Settings()
-		pickle.dump(self.settings, open('save', 'wb'), pickle.HIGHEST_PROTOCOL)
-		self._resetGame()
-		print('Settings reset')
-	def _onButton3Click(self, event):
+	def _showControls(self):
 		print('Use <Arrow Keys> to change the width and height of the board')
 		print('Use <Minus> and <Plus> to change the scale of the UI')
 		print('Use <B> to reveal/hide bombs')
-	def toggleDialog(self, event):
+
+	def toggleDialog(self):
+		if not self.modal.open:
+			self.gameStatePrev = self.gameState
+		self.gameState = self.gameStatePrev if self.modal.open else GameState.LOCKED.value
 		self.modal.toggleOpen()
 
 
