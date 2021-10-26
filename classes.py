@@ -8,37 +8,50 @@ class ModalWindow():
 	def __init__(self, onClick):
 		self.onClick = onClick
 		self.settings = readOrCreatePickle('save', Settings())
-		cellSize = 16 * self.settings.scale
+		self.cellSize = 16 * self.settings.scale
+		self.open = False
 
 		pygame.font.init()
-		self.font = pygame.font.SysFont('Comic Sans MS', 20)
+		self.font = pygame.font.SysFont('Comic Sans MS', math.floor(20 * self.settings.scale))
 
-		self.surf = pygame.Surface((self.settings.boardWidth * cellSize, (self.settings.boardHeight * cellSize) + 60 * self.settings.scale))
+		self.surf = pygame.Surface((self.settings.boardWidth * self.cellSize, (self.settings.boardHeight * self.cellSize) + 60 * self.settings.scale))
 		self.surf.set_colorkey((255,255,255), pygame.SRCALPHA)
 		self.surf.fill((255,255,255))
 		self.rect = self.surf.get_rect(topleft=(0,0))
 
-		self.surf2 = pygame.Surface((self.settings.boardWidth * cellSize - cellSize * 2, (self.settings.boardHeight * cellSize + (60 * self.settings.scale)) - cellSize * 2))
+		self.surf2 = pygame.Surface((self.settings.boardWidth * self.cellSize - self.cellSize * 2, (self.settings.boardHeight * self.cellSize + (60 * self.settings.scale)) - self.cellSize * 2))
 		self.surf2.fill((250,250,250))
-		self.surf.blit(self.surf2, self.surf.get_rect(topleft=(cellSize,cellSize)))
+		self.surf.blit(self.surf2, self.surf.get_rect(topleft=(self.cellSize,self.cellSize)))
 
 		buttonSize = int(24 * self.settings.scale)
-		buttonPosition = (cellSize + buttonSize / 2) + cellSize
+		buttonPosition = (self.cellSize + buttonSize / 2) + self.cellSize
 		newRect = self.surf.get_rect(topleft=(buttonPosition,buttonPosition))
 		self.closeButton = Button((newRect.x, newRect.y), self._onButtonClick)
 
 	def _onButtonClick(self, event):
 		self.onClick(event)
 
-	def updateModalUi(self):
-		self.surf.blit(self.closeButton.surf, self.closeButton.rect)
-		self.surf.blit(self.font.render('Scale: ' + str(self.settings.scale), False, (0, 0, 0)), (self.closeButton.rect.x + 40, self.closeButton.rect.y))
+	def toggleOpen(self):
+		self.open = not self.open
+
+	def updateModalUi(self, screen):
+		if self.open:
+			self.surf.blit(self.closeButton.surf, self.closeButton.rect)
+			self.surf.blit(self.font.render('Wins: ' + str(self.settings.wins), False, (0, 0, 0)), (self.cellSize * 2, self.cellSize * 4))
+			self.surf.blit(self.font.render('Losses: ' + str(self.settings.losses), False, (0, 0, 0)), (self.cellSize * 10, self.cellSize * 4))
+			self.surf.blit(self.font.render('Resets: ' + str(self.settings.resets), False, (0, 0, 0)), (self.cellSize * 20, self.cellSize * 4))
+			self.surf.blit(self.font.render('Win Lengths: ' + ', '.join(str(l) for l in self.settings.winLengths), False, (0, 0, 0)), (self.cellSize * 2, self.cellSize * 6))
+			self.surf.blit(self.font.render('Loss Lengths: ' + ', '.join(str(l) for l in self.settings.lossLengths), False, (0, 0, 0)), (self.cellSize * 2, self.cellSize * 8))
+			self.surf.blit(self.font.render('Scale: ' + str(self.settings.scale), False, (0, 0, 0)), (self.cellSize * 2, self.cellSize * 12))
+
+			screen.blit(self.surf, self.rect)
 
 	def handleEvents(self, event):
-		if event.type == pygame.MOUSEBUTTONDOWN:
-			self.closeButton.handleMouseDown(event)
-		if event.type == pygame.MOUSEBUTTONUP:
-			self.closeButton.handleMouseUp(event)
+		if self.open:
+			if event.type == pygame.MOUSEBUTTONDOWN:
+				self.closeButton.handleMouseDown(event)
+			if event.type == pygame.MOUSEBUTTONUP:
+				self.closeButton.handleMouseUp(event)
 
 class Display():
 	def __init__(self, rect, length):
@@ -77,19 +90,22 @@ class Display():
 				self.displaySurface.blit(pygame.transform.scale(self.numberSS.image_at(self.numberSprites[spriteIndex]), self.spriteSize), ((13 * self.scale) * index, 0))
 
 class Button():
-	def __init__(self, pos, onMouseUp):
+	def __init__(self, pos, onMouseUp, type = 'blank'):
 		self.onMouseUp = onMouseUp
+		self.type = type
 		
 		self.scale = readOrCreatePickle('save', Settings()).scale
 		self.spriteSize = (int(24 * self.scale), int(24 * self.scale))
 
 		self.buttonSS = SpriteSheet('spritesheets/button-sprites.png')
-		self.blank = (0,0,24,24)
-		self.blankPressed = (24,0,24,24)
-		self.disabled = (48,0,24,24)
+		self.buttonSprites = {
+			'blank': [(0,0,24,24), (24,0,24,24)],
+			'config': [(0,24,24,24), (24,24,24,24)],
+		}
 
-		self.surf = pygame.transform.scale(self.buttonSS.image_at(self.blank), self.spriteSize)
-		self.surf.set_colorkey((0, 0, 0), pygame.RLEACCEL)
+
+		self.surf = pygame.transform.scale(self.buttonSS.image_at(self.buttonSprites[self.type][0]), self.spriteSize)
+		# self.surf.set_colorkey((0, 0, 0), pygame.RLEACCEL)
 		self.rect = self.surf.get_rect(center=(pos))
 
 		self.isPressed = False
@@ -100,12 +116,12 @@ class Button():
 	def handleMouseDown(self, event):
 		if event.button == 1 and self.rect.collidepoint(pygame.mouse.get_pos()):
 			self.isPressed = True
-			self.surf = pygame.transform.scale(self.buttonSS.image_at(self.blankPressed), self.spriteSize)
+			self.surf = pygame.transform.scale(self.buttonSS.image_at(self.buttonSprites[self.type][1]), self.spriteSize)
 
 	def handleMouseUp(self, event):
 		if self.isPressed:
 			self.isPressed = False
-			self.surf = pygame.transform.scale(self.buttonSS.image_at(self.blank), self.spriteSize)
+			self.surf = pygame.transform.scale(self.buttonSS.image_at(self.buttonSprites[self.type][0]), self.spriteSize)
 
 			if self.rect.collidepoint(pygame.mouse.get_pos()):
 				self.onMouseUp(event)
